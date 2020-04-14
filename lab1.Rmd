@@ -1,0 +1,398 @@
+---
+title: "Lab 1 - Introduction to R"
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_depth: '3'
+  html_notebook:
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+editor_options:
+  chunk_output_type: inline
+---
+
+## Instructions and Overview
+
+If you've reached this point in the lab, congratulations! You have successfully cloned your GitHub repo for this class into RStudio. At the end of the assignment, I will explain how to commit your changes and push them back to GitHub, where they will be accessible to me for grading.
+
+As we move through this notebook, we will begin to get acquainted with R Markdown - the format in which these notebooks are written -, the themes of the course, and the statistical programming language R. Collectively, the nine labs in this course will give you an opportunity to engage with the course themes, data manipulation, and data presentation directly in R notebooks. Labs 2-3 will involve research planning, data discovery, and background research. Labs 4-7 will involve data exploration, analysis, and critique. Finally, labs 8 and 9 will involve summarizing findings, documenting knowledge gaps, and presenting uncertainty. In lab 5, you will begin aggregating your code into a Shiny data dashboard - an interactive digital tool for displaying data analysis. Each week, we will take pieces of our labs to build upon this dashboard. 
+
+For those of you that are Stats majors, some of the content of labs 4-7 will feel like review. Please keep in mind though that the primary goal of this course is not to teach you statistical analysis or data science. Instead, the primary goal of this course is to encourage you to think critically about a data practice - recognizing the human forces that are always involved in shaping data, responsibly documenting uncertainties in data, and communicating ways that data can both produce and delimit insight. While analyzing data in appropriate ways are important parts of each assignment, the reflections that you will write about the analyses you produce are perhaps even more important. 
+
+## Introduction to RStudio
+
+In this course we will be learning how to code in R inside the RStudio interface. You may be wondering the difference between the two. 
+
+**R** is a statistical computing language that allows you to:
+* Store data in a variety of formats
+* Perform calculations on data and variables, 
+* Build functions and applications, and 
+* Transform and graphically represent data
+
+**RStudio** is an Integrated Development Environment (IDE) for statistical computing. It is a platform for using and coding in R.
+
+Before we continue, please watch this 8-minute video introducing you to the RStudio Environment. 
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/TJmNvfhLCoI" frameborder="0" allowfullscreen></iframe>
+
+### Installing Packages
+
+The R community has developed a series of *packages* or collections of functions that we can use when coding in R. In this course we will be leveraging a series of packages known as the Tidyverse - designed to help users clean, transform, analyze, and visualize data. We will also be leveraging a series of packages for building a shiny data dashboard.
+
+**Skip installing these packages if you are working in RStudio Cloud**
+You will need to install the following packages in your R environment. To do so, you should copy and paste the following line into your Console. If you don't know where you console is, be sure to rewatch the RStudio YouTube video above. 
+
+install.packages(c("tidyverse", "lubridate", "shiny", "shinydashboard", "shinyWidget", "rmarkdown"))
+
+Once packages are installed, to load the package, we call the function *library()*, which let's R know that we will be referencing the functions encoded for this package in our code. You can think of an R package like a book, stored in a computer library. When you call, library(), it is as if we are checking that book out of the library so that we may reference its functions in our code. Run the code below after installing the packages above to ensure that everything installed properly. Refer to the video above if you do not know how to run the code. 
+
+```{r}
+library(tidyverse)
+library(lubridate)
+library(shiny)
+library(shinydashboard)
+library(shinyWidgets)
+```
+
+If you get any errors at this point, please email me. 
+
+## Introduction to R Markdown
+
+If you are viewing this document in RStudio, you'll notice a series of characters (like hashtags and asterisks) being used to demarcate headers, code chunks, italicized and emphasized words, bullets, numbering, figures, and tables. These characters are encoding how the document should be presented when we publish it. These symbols are part of R Markdown - an authoring framework for R that enables us to style documents and embed code. When we publish this document, you see the text following or in between these symbols formatted in a standardized way. If you would like to see how this document will appear once it's published, click the 'Preview' button in the navigation bar above. This will preview the published document in the Viewer to the right. 
+
+In future assignments, I have clearly marked where to fill in responses, so, for the most part, you will not necessarily need to change any of the R Markdown. I would, however, like to go over how R Markdown works so that you have a sense of how content will the notebook will appear in the published document. 
+
+### Code Chunks
+
+```{r eval=FALSE}
+This grey box between ```{r} and ``` is a code chunk. 
+
+Typically, when we put code in this chunk and then publish our R Markdown document, 
+the code written here will be run and output on the screen. 
+
+However, by placing eval=FALSE in the brackets, we tell R not to evaluate the code. 
+
+This is useful when we are just filling text into the code chunk.
+```
+
+### Headings
+
+```{r eval=FALSE}
+Use '#' to create headings:
+  
+# Heading 1
+## Heading 2
+### Heading 3
+```
+
+### Tables
+
+```{r eval=FALSE}
+Tables can be formated like this:
+  
+Header 1 | Header 1
+-------- | --------
+Cell 1  | Cell 2
+Cell 3  | Cell 4
+```
+
+Header 1 | Header 1
+-------- | --------
+Cell 1  | Cell 2
+Cell 3  | Cell 4
+
+### Bullets and Numbering
+
+```{r eval=FALSE}
+You can bullet content using the '*':
+
+* Point 1
+* Point 2
+```
+
+This will output:
+
+* Point 1
+* Point 2
+
+```{r eval=FALSE}
+You can number content like this:
+
+1. Point 1
+2. Point 2
+```
+
+This will output:
+
+1. Point 1
+2. Point 2
+
+
+For more information about formatting documents in R Markdown see [this](https://rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf) cheatsheet. Note how I created a hyperlink here!
+
+## Course Themes
+
+On March 30, 2020, Nate Silver - who had been vociferously vocal in sharing his insights into data regarding the Covid-19 pandemic - tweeted out to his networks:
+
+<blockquote class="twitter-tweet"><p lang="en" dir="ltr">Don&#39;t make pretty graphs with the data either. That just obscures how messy it is.</p>&mdash; Nate Silver (@NateSilver538) <a href="https://twitter.com/NateSilver538/status/1244681742168010755?ref_src=twsrc%5Etfw">March 30, 2020</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+The tweet really nicely sums up an overriding theme of this course. We can learn all sorts of techniques to produce beautiful charts, tables, and visualizations with data. But when we are dealing with messy, complex, and dynamic phenomena, such techniques can hide just how much uncertainty there is in data and just how much situated human perspective is interwoven through numeric calculations. This course is designed to encourage you to always keep these issues in mind as you engage in data analysis. 
+
+Do we all know who Nate Silver is? Nate Silver is perhaps one of the biggest superstars of statistics today. He gained notoriety following the 2008 US presidential election, when he first accurately predicted the results of 49 of the 50 states. By the 2012 election, his data had accurately predicted the results of all 50 states. His website FiveThirtyEight.com was quickly acquired by the New York Times and later by ESPN and ushered in a new wave of work at the intersection of data science and election forecasting. However, Nate Silver is well-acquainted with messy and uncertain data. While none of the major polling sites were able to accurately predict the results of the 2016 US presidential election, FiveThirtyEight's predictions (while placing the chances of a Trump victory higher than other news sources) were perhaps most surprising following his success in previous elections. By election day, FiveThirtyEight had placed the likelihood of a Clinton victory at 70%. I remember watching the news on election night and, as an anthropologist of data, almost falling out of my chair when I heard political correspondent Mike Murphy claim that "Today, data kind of died." Watch the clip below:
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/MhT5qT116wo" frameborder="0" allowfullscreen></iframe>
+
+An important lesson that emerged from this incredible data flop is just how important it is to be be able to critique our data landscape - to question what data is available and what data is not available, to consider how representative data may be of complex issues, and to acknowledge and communicate data uncertainties. The 2016 polls failed to consider a number of things. While widespread polling had been taking the pulse of the country in the months leading up to the election, pollsters underestimated the impact that voters undecided at the time polls were taken could have on the overall results. They failed to account for data uncertainty. Further, not every person in the country is polled leading up to the election. When determining who to poll, pollsters devise "representative samples" of the population - reaching out to likely voters in diverse age brackets, with diverse income levels, and with diverse educational backgrounds. They have to make a lot of assumptions about the composition of the country when coming up with these sample - often relying on how elections played out in the past, along with what has culturally changed since past elections, to predict how they will play out in the future. In 2016, many of their assumptions about the country's composition were wrong. 
+
+As statisticians turn their attention to the current public health crisis around Covid-19, such considerations should be at the forefront of our minds. As we will see throughout this course, the data that we have about Covid-19 is incredibly messy and riddled with inconsistencies. Data scientists and international organizations have had to very quickly aggregate data from all corners of the world - collecting case counts from countries with different medical systems, different standards for medical data reporting, and different politics. These countries themselves are trying to figure out how to gather this data from states and provinces, and states and provinces themselves are trying to figure out how to gather this data from hospitals. The coordinational capacity needed to produce the numbers that we eventually see is enormous, demanding considerable global information infrastructure.
+
+Further, as we will consider again and again throughout the quarter, the case count data that we have is only as good as the amount of testing for the virus that is taking place, and in many countries, including the US, testing has been incredibly slow. This guarantees that case counts will be under-reported. These are the types of issues Nate Silver is referring to when he tells the world to stop trying to produce pretty graphs of the spread. 
+
+## Ethnography
+
+This course is a research-based course. You will have an opportunity to engage in rapid-response data research relating to our current public health crisis and its impact on communities. In fact, for those of you that are really invested in your projects, there will be opportunities to publicly display your research in a platform called the [Disaster-STS-Network](https://disaster-sts-network.org/) - a digital space where researchers across the globe are convening to share rapid-response research about Covid-19.
+
+Every discipline has a set of methods that they leverage to advance research in their fields. Disciplinary research methods refer to the techniques and practices a particular discipline engages in order to gather data, analyze evidence, and deepen knowledge on a particular topic. For chemists, such methods might include experimentation and observation. For psychologists, such methods might include case studies and neuro-imaging. I'm an anthropologist, and in anthropology, one of our key methods is known as ethnography. 
+
+Ethnography is the practice of studying people and cultures. To do so, ethnographers may observe people as they interact in, move through, or make decisions within a particular space. Alternatively, they may interview people, eliciting narratives about what they find important, how they think about the world, and how their personal backgrounds have motivated their current commitments. Importantly, ethnography is often immersive; ethnographers deeply engage in a particular space, gathering as much detail as they can (and often more detail than they know what to do with) in order to later analyze and relay how cultural forces are operating within it.
+
+In this course, we are going to conduct an ethnography of a dataset. You may be asking - if ethnography is about studying people, why are we using it to study a dataset? The reason for this is that, in this course, we are taking as a given that all data has in certain ways been shaped by human assumptions, judgments, and politics. Let me provide an example:
+
+The last time I ran this course, one student spent the quarter studying a dataset documenting the perimeters of each documented wildfire in California since 1900. Each row in the dataset documented a fire name, the date the first alarm was sounded, the date it was contained, and the acreage that it burned. Each fire was also classified with a standardized list of fire "causes."  This list included causes like "Campfire," "Arson," and "Lightning." The student created visualizations of the number of documented fires in California that had been the result of each cause. In doing so, she found something odd - the cause of the fewest fires in California were collectively categorized as "Illegal Alien Campfires." 
+
+```{r fig.height=3, fig.width=5}
+fires <- read.csv("datasets/Fires_100.csv", stringsAsFactors = FALSE)
+fires %>% 
+  ggplot(aes(x = CAUSE, fill = CAUSE)) +
+  geom_bar() +
+  labs(title = "Number of CalFIRE-documented California Wildfires since 1878 by Cause", x = "Cause", y = "Count of Wildfires") + 
+  theme_bw() +
+  theme(legend.position = "none") +
+  coord_flip() 
+```
+
+We immediately flagged this. Why did this classification exist as its own separate category? Why was it not enough to classify these fires as "Campfires" - another cause code in the dataset?  This communicated to us that at a particular point in time, a governing body in California deemed it appropriate to count illegal alien campfires fires separately - producing a set a numbers and values that tell a different story than the one that would have been produced had all "campfires" been lumped together.  In this case, we needed to look beyond the numbers reported in order to make sense of what we were seeing in her analysis - taking into consideration how certain politics were at work in shaping what we were seeing. This opened up even more questions. What counts as a wildfire anyways? Who gets to decide?
+
+When we ethnographically analyze a dataset - immersing ourselves in it to investigate the cultural forces at play - we can pull such narratives to the fore. Accordingly, in this course, we are not only going to consider what quantitative insights we can extrapolate from data. We are also going to analyze the data for what it tells us about culture - how people perceive difference and belonging, how people represent complex ideas numerically, and how they prioritize certain forms of knowledge over others.
+
+## A Note on the Word Bias
+
+Some of you may be thinking - if there are human perspectives shaping data, doesn't that make it biased? After this section, you will not see or hear me use the word 'bias' this quarter. I avoid the word deliberately. The Oxford English Dictionary defines bias as
+
+> "An inclination, leaning, tendency, bent; a preponderating disposition or propensity; predisposition towards; predilection; prejudice." 
+
+All too often I hear people talk about the significance of "eliminating bias" from data or "avoiding biases" in data analysis. To me, this is firstly impossible. Numbers do not emerge out of nowhere but emerge from human perspectives (with inclinations, leanings, tendencies, and bents) deciding what to count and how to count it. I challenge any one of you to approach me with a number that has not in some way been generated by a human (hint: this is a trick - if you, as a human, come to me with a number, you've already failed the challenge.) You can never remove that human element from data; there will always be bias. If you think about it, even the fervent commitment to remove bias from data is a bias! 
+
+Secondly, the idea of doing so is also not a particularly responsible goal. When we suggest that it is possible for numbers to speak for themselves, we tend to ignore all of the ways that data can be weaponized against groups of people. We are seeing this play out constantly in the news today. So-called "unbiased" algorithms for predicting where crime will happen turn into tools of surveillance for poor and racially diverse communities:
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/ZMsSc_utZ40" frameborder="0" allowfullscreen></iframe>
+
+So-called "unbiased" algorithms for screening resumes turn out to favor men over women and transgender individuals:
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/JOzQjT-hJ8k" frameborder="0" allowfullscreen></iframe>
+
+This is not to say that we shouldn't critique data representations and combat data practices that propagate inequality or harm certain communities; we absolutely should. However, in a world where this is playing out, I would much prefer to *know* the politics and perspectives of the individuals collecting data and producing data analyses than to pretend they don't exist. Then I can decide for myself whether I find their work trustworthy. In my opinion, we need ethical and politically responsible human data stewards - not processes that pretend to be able to strip data of its humanness. I hope you see this course as an opportunity to develop some of these skills. In this course, we will take biased data as a given and figure out how to move from there. 
+
+## Introduction to R
+
+At this point, we will begin to review some basic functionality in R. As you read through each section, be sure to run the code chunks to see how the code is operating. 
+
+### Assigning Variables
+
+Variables are used to store data in R. We use "<-" to assign a variable. The text that comes before "<-" will be our variable name, and the text that comes after "<-" will be the value stored in it. 
+```{r}
+class_name <- "Data Sense and Exploration"
+class_dept <- "STS"
+class_number <- "115"
+class_size <- 33
+
+sts_majors <- 20
+stats_majors <- 8
+other <- 5
+```
+
+Every object in R has a particular *class*, which designates the variable's "type" and how functions can be applied to it. We can check the class of a variable by calling it in "class()".
+```{r}
+class(class_name)
+class(class_size)
+class(class_number)
+```
+Did you notice how class_number above is a character variable? This is because when we created the class_number variable above, we put the number in quotation marks - indicating to R to treat the number as a set of characters rather than a number. Since our class number is a reference to our class, it acts more like a label than a number. 
+
+If someone drops a class, we can easily change the value of the variable.
+```{r}
+#Store the calculation in a variable.
+class_size <- class_size - 1
+
+#Print the variable
+class_size
+```
+Notice how we re-assigned the new subtracted value to class_size above. 
+
+We can also perform calculations on variables, such as addition, subtraction, multiplication, and division. Checking whether variables are greater than, less than, or equal to each other will return TRUE or FALSE. 
+```{r}
+sts_majors + stats_majors
+
+sts_majors > stats_majors
+```
+
+We can also perform operations on strings - concatenating them with the *paste* function. For instance, we can paste the class_dept string with the class_number string to create a class code. When we do this, we need to tell R what characters should separate the strings. We will review this again later in the quarter. 
+```{r}
+class_code <- paste(class_dept, class_number, sep=" ")
+class_code
+```
+
+### Vectors
+
+A vector is a set of values (organized like a list) that are all of the same type. A vector can be of type integer, double, characters, logical, for example. We create a vector by placing a set of values in "c(___)". Here c stands for "combine" - indicating that we are combining values.  
+```{r}
+birth_months <- c(4, 7, 12, 3, 1)
+first_letter_name <- c("A","B","C","D","E")
+time_on_phone <- c(34, 90, 2, 6, NA)
+```
+
+We can measure the length of a vector by calling the function *length*. This counts how many values are listed in the vector. 
+```{r}
+length(birth_months)
+```
+
+We can also extract values from specific positions in the vector by referencing the index in brackets. So let's say I want to extract the third value in the vector. 
+```{r}
+birth_months[3]
+```
+
+To extract all values except the value in a particular position, we will use the "-" sign before the index in brackets. So let's say I want to extract all values except the third in the vector.
+```{r}
+birth_months[-3]
+```
+
+We can also extract a range of values from specific positions in the vector by referencing that range of indexes in brackets separated by a ":". So let's say I want to extract the first through the third value in the vector.
+```{r}
+first_letter_name[1:3]
+```
+
+Finally, to extract values from a non-sequential combination of specific positions in the vector, we can reference each of their indexes in brackets in "c()".  
+```{r}
+first_letter_name[c(1,3,5)]
+```
+
+We can perform operations on vectors - finding their max, their min, their sum, their average, for example. However, we may get an error if we have any empty values in the dataset. To avoid this, we need to communicate to R to remove NA values. 
+```{r}
+max(time_on_phone)
+min(time_on_phone)
+sum(time_on_phone)
+mean(time_on_phone)
+
+max(time_on_phone, na.rm=TRUE)
+min(time_on_phone, na.rm=TRUE)
+sum(time_on_phone, na.rm=TRUE)
+mean(time_on_phone, na.rm=TRUE)
+```
+
+### Matrices
+
+We won't be using matrices much in this course. However, knowing this data type will help you understand its differences from the data types we will use. Let's create a second numeric vector. 
+```{r}
+birth_months2 <- c(11, 12, 3, 4, 4)
+```
+
+By binding this together with birth_months, we create a matrix - or a 2-dimensional collection of elements of all the same type.
+```{r}
+birth_months_matrix <- rbind(birth_months, birth_months2)
+birth_months_matrix
+```
+
+We can determine the number of rows in the matrix by calling *nrow* and we can determine the number of columns in the matrix by calling *ncol*.
+```{r}
+nrow(birth_months_matrix)
+ncol(birth_months_matrix)
+```
+
+We can also extract values from specific positions in the vector by referencing the row position and the column position of the number in brackets. The format for doing so is [row, column] So let's say that we want to extract the value in the second row, third column.
+```{r}
+birth_months_matrix[2,3]
+```
+
+To extract the entire second row, we would leave the column position blank. This would return a *vector* of values stored in the second row of the matrix.
+```{r}
+birth_months_matrix[2,]
+```
+
+And to extract the entire third column, we would leave the row position blank. This would return a *vector* of values stored in the third column of the matrix. 
+```{r}
+birth_months_matrix[,3]
+```
+
+### Lists
+
+I will only briefly go over *lists* because, for the most part, we will not be using them in this class. *Lists* are collections of objects in R. For instance, you can have a collection of numeric vectors, character vectors, logical vectors, matrices, and other lists. You can assign names to the objects in lists so that you can more easily reference them. For instance, below I assign the name x, y, and z to the three objects respectively. Once a name has been assigned to the object, you can reference it by listing the name of the list followed by the *$* followed by the name of the object. 
+
+```{r}
+first_list <- list(x = first_letter_name, y = time_on_phone, z = birth_months)
+
+first_list$x[2:3]
+first_list$y[c(1,4)]
+first_list$z[2]
+```
+
+### Data Frames
+
+In this course, we will be working primarily with rectangular datasets in a data type called a *data frame*.  A data frame has a certain number of rows and a certain number of columns. It is a list of *vectors* of all the same length. 
+
+**From this point forward, we will refer to each row in a data frame as an *observation* and each column in a data frame as a *variable*.** This is because rows refer to something that we see in the world, and columns describe that thing we are seeing. Imagine we have a table like this below.
+
+Name | Age | Birth Month | Time on Phone
+---- | ---- | ---- | ---- |
+Sally | 23 | 3 | 42
+Julie | 40 | 2 | 98
+Mark | 14 | 8 | 120
+
+Each row is an observation - in this case a person - and each column is a variable describing something about a person. Note how each column is also a vector. The Name column is a character vector of names. The Age column is a numeric vector of ages.
+
+Let's go head and create this vector below:
+
+```{r}
+df <- data.frame(name = c("Sally", "Julie", "Mike"), 
+                 age = c(23, 40, 14), 
+                 birth_month = c(3, 2, 8),
+                 time_on_phone = c(42, 98, 120))
+```
+
+When working with very large datasets, we need tools to help us get a sense of the dataset without having to load the entire data frame. For instance, we can view the first 6 rows of the dataset by calling *head()*.
+```{r}
+head(df)
+```
+
+*dim()* will tell us the dimensions of the data frame - i.e. the number of rows and the number of columns in the data frame. 
+```{r}
+dim(df)
+```
+
+"str()" provides a great deal of information about the observations in the data frame, including the number of variables, the number of observations, the variable names, their data types, and a list of observations.
+```{r}
+str(df)
+```
+
+Just like as we had done with matrices, we can extract particular rows and columns in a data frame by referring to their indexes in brackets. 
+```{r}
+df[2,4]
+```
+
+We often don't want to have the count the index of each column in order to refer to a particular variable in our dataframe. Instead, we can refer to the variable (column) name using the same "$" notation that we discussed above. For instance, I could see the values in the birth_month column by calling:
+```{r}
+df$birth_month
+```
+
+If I wanted the extract the second observation in the birth_month, I would call:
+```{r}
+df$birth_month[2]
+```
+
+What if you don't know what the column names are? To see a list of column names, we could refer to the data dictionary. We could also use the function "colnames()". 
+```{r}
+colnames(df)
+```
+Finally, on the top right hand side of your RStudio screen, you will see a tab called Environment. If you click on that tab, you should see all of the data that you have stored in variables. You can check column names here. 
+

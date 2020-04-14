@@ -1,0 +1,244 @@
+---
+title: "Lab 9 - Presenting Data"
+output:
+  html_notebook:
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_depth: '3'
+editor_options:
+  chunk_output_type: inline
+---
+
+## Instructions and Overview
+
+This week, I'd like you to primarily focus on preparing your final presentation. However, we will also spend just a bit of time documenting the uncertainty in each of the numbers and plots on our dashboards. 
+
+## Getting Started
+
+### Load the relevant libraries
+```{r}
+library(tidyverse)
+library(lubridate)
+library(shiny)
+library(shinydashboard)
+library(shinyWidgets)
+```
+
+### Import and clean example datasets 
+```{r}
+hospitals <- read.csv("https://raw.githubusercontent.com/lindsaypoirier/STS-115/master/datasets/Hospitals.csv", stringsAsFactors = FALSE)
+
+cases <- read.csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv", stringsAsFactors = FALSE)
+
+#Do not worry about this line of code for now. Since the cases data gets appended every day with a new column representing that day's case counts, if we want the total cases per country, we need to add up all of the previous day's counts into a new column. The column below does this for us. 
+cases <- 
+  cases %>% 
+  mutate(Total.Cases = 
+           cases %>% 
+           select(starts_with("X")) %>% 
+           rowSums()
+         ) %>%
+  select(Province.State, Country.Region, Total.Cases)
+
+hospitals$ZIP <- as.character(hospitals$ZIP)
+
+hospitals$ZIP <- str_pad(hospitals$ZIP, 5, pad = "0") 
+
+is.na(hospitals) <- hospitals == "NOT AVAILABLE"
+is.na(hospitals) <- hospitals == -999
+is.na(cases) <- cases == ""
+
+hospitals$SOURCEDATE <- ymd_hms(hospitals$SOURCEDATE)
+hospitals$VAL_DATE <- ymd_hms(hospitals$VAL_DATE)
+```
+
+### Import and clean your dataset. 
+```{r}
+#Copy and paste relevant code from Lab 4 to import your data here. 
+
+#Copy and paste relevant code from Lab 4 to clean your data here. This includes any row binding, character removals, converions in variable type, date formatting, or NA conversions. 
+```
+
+## Continue your shiny app.
+
+Now we will aggregate all of the text that you produced above, along with text that you produced in lab 3 into an "About the Data" page on your Shiny App. Follow the instructions below to fill your text into a new page created on the front end of the app. 
+
+```{r}
+#INPUT VARIABLES
+
+geo_input_choices <- 
+  #REPLACE hospitals BELOW WITH YOUR OWN DATAFRAME
+  hospitals %>% 
+  #REPLACE STATE BELOW WITH YOUR OWN GEOGRAPHIC VARIABLE
+  select(STATE) %>% 
+  distinct() %>% 
+  #REPLACE STATE BELOW WITH YOUR OWN GEOGRAPHIC VARIABLE
+  arrange(STATE)
+
+#COMMENT LINES BELOW IF YOU DO NOT HAVE A TEMPORAL VARIABLE IN YOUR DATAFRAME
+date_input_start <- 
+  #REPLACE hospitals BELOW WITH YOUR OWN DATAFRAME
+  hospitals %>% 
+  #REPLACE SOURCEDATE BELOW WITH YOUR OWN TEMPORAL VARIABLE
+  summarize(date = min(SOURCEDATE))
+
+date_input_end <- 
+  #REPLACE hospitals BELOW WITH YOUR OWN DATAFRAME
+  hospitals %>% 
+  #REPLACE SOURCEDATE BELOW WITH YOUR OWN TEMPORAL VARIABLE
+  summarize(date = max(SOURCEDATE))
+#COMMENT LINES ABOVE IF YOU DO NOT HAVE A TEMPORAL VARIABLE IN YOUR DATAFRAME
+
+#UI
+
+ui <- dashboardPage(
+  
+  #REPLACE 'TITLE HERE' BELOW WITH YOUR OWN TITLE
+  dashboardHeader(title = "TITLE HERE"),
+  #REPLACE 'TITLE HERE' ABOVE WITH YOUR OWN TITLE
+  
+  dashboardSidebar(
+      sidebarMenu(
+        menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
+        menuItem("About the Data", tabName = "about", icon = icon("info-sign"))
+      ),
+      selectInput(inputId = "geo_val", label = "Select an geography:", choices = geo_input_choices, selected = geo_input_choices[1]),
+      #COMMENT LINE BELOW IF YOU DO NOT HAVE A TEMPORAL VARIABLE IN YOUR DATAFRAME
+      dateRangeInput(inputId = "date_val", label = "Select a date range:", start = date_input_start$date, end = date_input_end$date)
+      #COMMENT LINE ABOVE IF YOU DO NOT HAVE A TEMPORAL VARIABLE IN YOUR DATAFRAME
+  ),
+  
+  dashboardBody(
+    tags$head(tags$style(HTML('.content-wrapper { overflow: auto; }'))),
+    tabItems(
+      tabItem(tabName = "dashboard",
+        infoBoxOutput("value1", width = 4),
+        infoBoxOutput("value2", width = 4),
+        infoBoxOutput("value3", width = 4),
+        
+        box(tags$p("The number above does not account for..."), width = 4),
+        box(tags$p("The number above does not account for..."), width = 4),
+        box(tags$p("The number above does not account for git, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam ei"), width = 4),
+     
+        box(plotOutput("plot1")),
+        box(plotOutput("plot2")),
+        
+        box(tags$p("The plot above does not account for..."), width = 6),
+        box(tags$p("The plot above does not account for..."), width = 6),
+        
+        box(plotOutput("plot3")),
+        box(plotOutput("plot4")),
+        
+        box(tags$p("The plot above does not account for..."), width = 6),
+        box(tags$p("The plot above does not account for..."), width = 6)
+      ),
+      tabItem(tabName = "about",
+              tags$h1("Data Source"),
+                #REPLACE TEXT IN QUOTATIONS BELOW WITH YOUR OWN TEXT ABOUT YOUR DATA'S SOURCE
+              tags$p("Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?"),
+              #REPLACE TEXT IN QUOTATIONS ABOVE WITH YOUR OWN TEXT ABOUT YOUR DATA'S SOURCE
+              
+              tags$h1("Data Context"),
+              #REPLACE TEXT IN QUOTATIONS BELOW WITH YOUR OWN TEXT ABOUT YOUR DATA'S CONTEXT
+              tags$p("Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?"),
+              #REPLACE TEXT IN QUOTATIONS ABOVE WITH YOUR OWN TEXT ABOUT YOUR DATA'S SOURCE
+              
+              tags$h1("Insights"),
+              #REPLACE TEXT IN QUOTATIONS BELOW WITH YOUR OWN TEXT ABOUT YOUR INSIGHTS
+              tags$p("Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?"),
+              #REPLACE TEXT IN QUOTATIONS ABOVE WITH YOUR OWN TEXT ABOUT YOUR INSIGHTS
+              
+              tags$h1("Knowledge Gaps"),
+              #REPLACE TEXT IN QUOTATIONS BELOW WITH YOUR OWN TEXT ABOUT YOUR KNOWLEDGE GAPS
+              tags$p("Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?")
+              #REPLACE TEXT IN QUOTATIONS ABOVE WITH YOUR OWN TEXT ABOUT YOUR KNOWLEDGE GAPS
+      )
+    )
+  )
+)
+  
+
+```
+
+We won't be touching the server function this week. You can copy and paste yours from Lab 7 to replace my code below. 
+
+```{r}
+server <- function(input, output) {
+  
+  output$value1 <- renderInfoBox({
+    quant_insight1 <- 0
+    #Replace '0' above with the code for one of the values you calculated above. Replace 'FILL DESCRIPTION HERE' with a brief description of this number.  
+    infoBox(quant_insight1,'FILL DESCRIPTION HERE', icon = icon("stats", lib='glyphicon'), color = "purple")
+  })
+  
+  output$value2 <- renderInfoBox({
+    quant_insight2 <- 0
+    #Replace '0' above with the code for one of the values you calculated above. Replace 'FILL DESCRIPTION HERE' with a brief description of this number.  
+    infoBox(quant_insight2,'FILL DESCRIPTION HERE', icon = icon("stats", lib='glyphicon'), color = "purple")
+  })
+  
+  output$value3 <- renderInfoBox({
+    quant_insight3 <- 0
+    #Replace '0' above with the code for one of the values you calculated above. Replace 'FILL DESCRIPTION HERE' with a brief description of this number.  
+    infoBox(quant_insight3,'FILL DESCRIPTION HERE', icon = icon("stats", lib='glyphicon'), color = "purple")
+  })
+  
+  
+  output$plot1 <- renderPlot({
+    hospitals %>% 
+      filter(
+        STATE == input$geo_val & 
+        SOURCEDATE > input$date_val[1] &
+        SOURCEDATE < input$date_val[2]
+        ) %>%
+      ggplot(aes(x = TYPE)) + geom_bar()
+    #Replace plot above with your own plot. 
+    
+  })
+  
+  output$plot2 <- renderPlot({
+    hospitals %>% 
+      filter(
+        STATE == input$geo_val & 
+        SOURCEDATE > input$date_val[1] &
+        SOURCEDATE < input$date_val[2]
+        ) %>%
+      ggplot(aes(x = TYPE)) + geom_bar()
+    #Replace plot above with your own plot. 
+  })
+  
+  output$plot3 <- renderPlot({
+    hospitals %>% 
+      filter(
+        STATE == input$geo_val & 
+        SOURCEDATE > input$date_val[1] &
+        SOURCEDATE < input$date_val[2]
+        ) %>%
+      ggplot(aes(x = TYPE)) + geom_bar()
+    #Replace plot above with your own plot. 
+    
+  })
+  
+  output$plot4 <- renderPlot({
+    hospitals %>% 
+      filter(
+        STATE == input$geo_val & 
+        SOURCEDATE > input$date_val[1] &
+        SOURCEDATE < input$date_val[2]
+        ) %>%
+      ggplot(aes(x = TYPE)) + geom_bar()
+    #Replace plot above with your own plot. 
+  })
+  
+}
+```
+
+
+```{r}
+shinyApp(ui, server)
+```
+

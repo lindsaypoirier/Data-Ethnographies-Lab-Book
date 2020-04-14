@@ -1,0 +1,257 @@
+---
+title: "Lab 8 - Summarizing Insights and Data Gaps"
+output: 
+  html_notebook:
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_depth: '3'
+editor_options:
+  chunk_output_type: inline
+---
+
+## Instructions and Overview
+
+In this lab, you will refer to the plots you created in each of your previous labs to summarize insights and critiques of the dataset you've been analyzing. This text will be added to an "About" page on your data dashboard.  
+
+## Getting Started
+
+### Load the relevant libraries
+```{r}
+library(tidyverse)
+library(lubridate)
+library(shiny)
+library(shinydashboard)
+library(shinyWidgets)
+```
+
+### Import and clean your dataset. 
+```{r}
+#Copy and paste relevant code from Lab 4 to import your data here. 
+
+#Copy and paste relevant code from Lab 4 to clean your data here. This includes any row binding, character removals, converions in variable type, date formatting, or NA conversions. 
+```
+
+## Summarize Insights
+
+In about 500 words, describe how your understanding of your topic has advanced as a result of your research. Reference specific statistics, plots, or tables in this section to communicate what key insights you were able to draw from the data. Some things to consider as you are writing this section:
+
+1. Be sure to contextualize your findings in the appropriate temporal and geographic context. If your dataset is about the average age of homeowners, and it only spans from 2012-2015 and covers the state of CA:
+  * Imprecise: "There are more general acute care hospitals than any other hospital."
+  * Better: "Based on data aggregated from government sources by Oak Ridge National Laboratory since 2012, there are more general acute care hospitals in the United States than any other type of hospital."
+2. Make a clear distinction between what the data empirically shows you and how you interpret the results. Again, imagine that your dataset is about the average age of homeowners:
+  * Imprecise: "This data indicates that many hospitals do not have enough beds to take on new patients." 
+  * Better: "According to this data, the median number of beds at general acute hospitals in the US is 139. Comparing this to the case rates in the US since January, this suggests that many hospitals will not have enough beds available to take on the influx in patients."
+3. Consider your data issues:
+  * Imprecise: "From January to present the growth of the Covid-19 cases has increased most dramatically in the US."
+  * Better: "From January to present the growth of the Covid-19 cases has increased most dramatically in the US. However, since the case data is only as accurate as the portion of the population being test and countries are testing at different capacities, this measure may be imprecise."
+
+```{r eval=FALSE}
+Fill your response here. 
+```
+
+## Characterize Knowledge Gaps
+
+In what ways might the data in your dataset be inaccurate? Describe in specific detail how these inaccuracies might affect your data analysis. Reference a specific analysis you've completed (either through transformation or plotting), and describe how this issue might impact how you interpret your data analysis.
+
+```{r eval=FALSE}
+Fill your response here. 
+```
+
+In what ways might your dataset be incomplete or non-representative of the extent of the issues? Describe in specific detail how the data's incompleteness might affect your data analysis.  Reference a specific analysis you've completed (either through transformation or plotting), and describe how this issue might impact how you interpret your data analysis.
+
+```{r eval=FALSE}
+Fill your response here. 
+```
+
+In what ways have you had to make assumptions in order to glean insights from your dataset? Describe in specific detail how these assumptions might affect your data analysis.  Reference a specific analysis you've completed (either through transformation or plotting), and describe how this issue might impact how you interpret your data analysis.
+
+```{r eval=FALSE}
+Fill your response here. 
+```
+
+What don’t you know about your data domain that has made it difficult to interpret the data? Describe in specific detail how these cultural gaps might affect your data analysis.  Reference a specific analysis you've completed (either through transformation or plotting), and describe how this issue might impact how you interpret your data analysis.
+
+```{r eval=FALSE}
+Fill your response here. 
+```
+
+Using the functions we have learned in R, create one plot that graphically represents one of the issues that you outlined above. It might be a plot that displays the sampling gaps. It might be a plot that showcases where data quality issues are present in your data. It might be a set of plots that show how different results are produced when different assumptions are made. Write a caption for this plot, explaining how it illustrates potential issues with your data analysis. 
+
+```{r fig.height=5, fig.width=10}
+#Fill code here. 
+```
+
+
+## Continue your shiny app.
+
+Now we will aggregate all of the text that you produced above, along with text that you produced in lab 3 into an "About the Data" page on your Shiny App. Follow the instructions below to fill your text into a new page created on the front end of the app. 
+
+```{r}
+
+#INPUT VARIABLES
+
+geo_input_choices <- 
+  #REPLACE hospitals BELOW WITH YOUR OWN DATAFRAME
+  hospitals %>% 
+  #REPLACE STATE BELOW WITH YOUR OWN GEOGRAPHIC VARIABLE
+  select(STATE) %>% 
+  distinct() %>% 
+  #REPLACE STATE BELOW WITH YOUR OWN GEOGRAPHIC VARIABLE
+  arrange(STATE)
+
+#COMMENT LINES BELOW IF YOU DO NOT HAVE A TEMPORAL VARIABLE IN YOUR DATAFRAME
+date_input_start <- 
+  #REPLACE hospitals BELOW WITH YOUR OWN DATAFRAME
+  hospitals %>% 
+  #REPLACE SOURCEDATE BELOW WITH YOUR OWN TEMPORAL VARIABLE
+  summarize(date = min(SOURCEDATE))
+
+date_input_end <- 
+  #REPLACE hospitals BELOW WITH YOUR OWN DATAFRAME
+  hospitals %>% 
+  #REPLACE SOURCEDATE BELOW WITH YOUR OWN TEMPORAL VARIABLE
+  summarize(date = max(SOURCEDATE))
+#COMMENT LINES ABOVE IF YOU DO NOT HAVE A TEMPORAL VARIABLE IN YOUR DATAFRAME
+
+#UI
+
+ui <- dashboardPage(
+  
+  #REPLACE 'TITLE HERE' BELOW WITH YOUR OWN TITLE
+  dashboardHeader(title = "TITLE HERE"),
+  #REPLACE 'TITLE HERE' ABOVE WITH YOUR OWN TITLE
+  
+  dashboardSidebar(
+      sidebarMenu(
+        menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
+        menuItem("About the Data", tabName = "about", icon = icon("info-sign"))
+      ),
+      selectInput(inputId = "geo_val", label = "Select an geography:", choices = geo_input_choices, selected = geo_input_choices[1]),
+      #COMMENT LINE BELOW IF YOU DO NOT HAVE A TEMPORAL VARIABLE IN YOUR DATAFRAME
+      dateRangeInput(inputId = "date_val", label = "Select a date range:", start = date_input_start$date, end = date_input_end$date)
+      #COMMENT LINE ABOVE IF YOU DO NOT HAVE A TEMPORAL VARIABLE IN YOUR DATAFRAME
+  ),
+  
+  dashboardBody(
+    tabItems(
+      tabItem(tabName = "dashboard",
+        infoBoxOutput("value1", width = 4),
+        infoBoxOutput("value2", width = 4),
+        infoBoxOutput("value3", width = 4),
+     
+        box(plotOutput("plot1")),
+        box(plotOutput("plot2")),
+        box(plotOutput("plot3")),
+        box(plotOutput("plot4"))
+      ),
+      tabItem(tabName = "about",
+              tags$h1("Data Source"),
+                #REPLACE TEXT IN QUOTATIONS BELOW WITH YOUR OWN TEXT ABOUT YOUR DATA'S SOURCE
+              tags$p("Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?"),
+              #REPLACE TEXT IN QUOTATIONS ABOVE WITH YOUR OWN TEXT ABOUT YOUR DATA'S SOURCE
+              
+              tags$h1("Data Context"),
+              #REPLACE TEXT IN QUOTATIONS BELOW WITH YOUR OWN TEXT ABOUT YOUR DATA'S CONTEXT
+              tags$p("Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?"),
+              #REPLACE TEXT IN QUOTATIONS ABOVE WITH YOUR OWN TEXT ABOUT YOUR DATA'S SOURCE
+              
+              tags$h1("Insights"),
+              #REPLACE TEXT IN QUOTATIONS BELOW WITH YOUR OWN TEXT ABOUT YOUR INSIGHTS
+              tags$p("Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?"),
+              #REPLACE TEXT IN QUOTATIONS ABOVE WITH YOUR OWN TEXT ABOUT YOUR INSIGHTS
+              
+              tags$h1("Knowledge Gaps"),
+              #REPLACE TEXT IN QUOTATIONS BELOW WITH YOUR OWN TEXT ABOUT YOUR KNOWLEDGE GAPS
+              tags$p("Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?")
+              #REPLACE TEXT IN QUOTATIONS ABOVE WITH YOUR OWN TEXT ABOUT YOUR KNOWLEDGE GAPS
+      )
+    )
+  )
+)
+  
+
+```
+
+We won't be touching the server function this week. You can copy and paste yours from Lab 7 to replace my code below. 
+
+```{r}
+server <- function(input, output) {
+  
+  output$value1 <- renderInfoBox({
+    quant_insight1 <- 0
+    #Replace '0' above with the code for one of the values you calculated above. Replace 'FILL DESCRIPTION HERE' with a brief description of this number.  
+    infoBox(quant_insight1,'FILL DESCRIPTION HERE', icon = icon("stats", lib='glyphicon'), color = "purple")
+  })
+  
+  output$value2 <- renderInfoBox({
+    quant_insight2 <- 0
+    #Replace '0' above with the code for one of the values you calculated above. Replace 'FILL DESCRIPTION HERE' with a brief description of this number.  
+    infoBox(quant_insight2,'FILL DESCRIPTION HERE', icon = icon("stats", lib='glyphicon'), color = "purple")
+  })
+  
+  output$value3 <- renderInfoBox({
+    quant_insight3 <- 0
+    #Replace '0' above with the code for one of the values you calculated above. Replace 'FILL DESCRIPTION HERE' with a brief description of this number.  
+    infoBox(quant_insight3,'FILL DESCRIPTION HERE', icon = icon("stats", lib='glyphicon'), color = "purple")
+  })
+  
+  
+  output$plot1 <- renderPlot({
+    hospitals %>% 
+      filter(
+        STATE == input$geo_val & 
+        SOURCEDATE > input$date_val[1] &
+        SOURCEDATE < input$date_val[2]
+        ) %>%
+      ggplot(aes(x = TYPE)) + geom_bar()
+    #Replace plot above with your own plot. 
+    
+  })
+  
+  output$plot2 <- renderPlot({
+    hospitals %>% 
+      filter(
+        STATE == input$geo_val & 
+        SOURCEDATE > input$date_val[1] &
+        SOURCEDATE < input$date_val[2]
+        ) %>%
+      ggplot(aes(x = TYPE)) + geom_bar()
+    #Replace plot above with your own plot. 
+  })
+  
+  output$plot3 <- renderPlot({
+    hospitals %>% 
+      filter(
+        STATE == input$geo_val & 
+        SOURCEDATE > input$date_val[1] &
+        SOURCEDATE < input$date_val[2]
+        ) %>%
+      ggplot(aes(x = TYPE)) + geom_bar()
+    #Replace plot above with your own plot. 
+    
+  })
+  
+  output$plot4 <- renderPlot({
+    hospitals %>% 
+      filter(
+        STATE == input$geo_val & 
+        SOURCEDATE > input$date_val[1] &
+        SOURCEDATE < input$date_val[2]
+        ) %>%
+      ggplot(aes(x = TYPE)) + geom_bar()
+    #Replace plot above with your own plot. 
+  })
+  
+}
+```
+
+
+```{r}
+shinyApp(ui, server)
+```
+
+

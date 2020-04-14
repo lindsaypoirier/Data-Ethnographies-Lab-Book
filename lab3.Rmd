@@ -1,0 +1,382 @@
+---
+title: "Lab 3 - Context and Historical Background"
+output:
+  html_notebook:
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_depth: '3'
+editor_options:
+  chunk_output_type: inline
+---
+
+```{r}
+library(tidyverse)
+```
+
+
+## Instructions and Overview
+
+This week you are going to do some background research on the dataset that you will be working with throughout the quarter - assessing how the data you plan to analyze get produced, who produced them, what they are designed to represent (and also what they might ignore), and what socio-political contexts might affect their scope. 
+
+Please respond to at least 7 of the questions listed below. As you respond to these questions, you should be sure to examine the data documentation, the web source where you retrieved the data, the website of the organization that collected or published the data, and any laws/press releases/news articles that reference the data. **All responses should be in your own words, and be sure to cite all sources.** 
+
+As you work through these questions, I will also be responding in order to introduce you to the three datasets that will serve as examples in our labs throughout this quarter. These three datasets are:
+
+1. A Covid-19 Case Counts Dataset
+2. A dataset of Hospitals in the US
+3. A dataset of Health Economics Indicators across the globe
+
+Check them out below:
+
+```{r}
+cases <- read.csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv", stringsAsFactors = FALSE)
+
+#Do not worry about this line of code for now. Since the cases data gets appended every day with a new column representing that day's case counts, if we want the total cases per country, we need to add up all of the previous day's counts into a new column. The column below does this for us. 
+cases <- 
+  cases %>% 
+  mutate(Total.Cases = 
+           cases %>% 
+           select(starts_with("X")) %>% 
+           rowSums()
+         ) %>%
+  select(Province.State, Country.Region, Total.Cases)
+
+cases %>% head()
+```
+
+```{r}
+hospitals <- read.csv("https://raw.githubusercontent.com/lindsaypoirier/STS-115/master/datasets/Hospitals.csv", stringsAsFactors = FALSE)
+
+hospitals %>% head()
+```
+
+```{r}
+world_health_econ <- read.csv("https://raw.githubusercontent.com/lindsaypoirier/STS-115/master/datasets/world_health_econ.csv", stringsAsFactors = FALSE)
+
+world_health_econ %>% head()
+```
+
+We will talk more about the values encoded in these datasets next week. For this week, we will consider the context where these datasets come from, how they were produced, and how they have made a mark on the world.
+
+Note that very rarely is data documentation thorough enough to address all of the questions below. You can expect that you will likely not be able to answer all questions. As you work through the assignment, consider how well you believe the dataset to be documented and how the documentation could be improved.
+
+## Data Context and Historical Background
+
+Before we start analyzing data, it is important that we understand the social, political, and economic contexts under which data gets produced. These forces all play a role in implicating how variables in a dataset get defined, how numbers get reported, and how we interpret the features and quantities represented in data. Consider data about the spread of Covid-19 - a dataset that we will examine throughout the labs this quarter. If we were take the numbers reported in this dataset at face value, without examining the contexts under which that data was produced, we could seriously be undermining the extent of the spread. Please watch a *short segment* of the following video to hear more about this. **You need only watch from 2:14 minutes into the video to 10:23 in the video.**
+
+<iframe src='https://players.brightcove.net/665003303001/SJg0bzqkZ_default/index.html?videoId=6148723357001&usrPersonaAds=0?start=134&end=623' allowfullscreen frameborder=0></iframe>
+
+### Who collects the data? Who aggregates the data? Who publishes the data? Why are these groups involved in the production of the data?
+
+#### Covid-19 Case Counts 
+
+The Covid-19 Case Counts are published on GitHub by a team of researchers at Johns Hopkins Center for Systems Science and Engineering, led by Professor Lauren Garnder. The Johns Hopkins team aggregates the data from the World Health Organization, the U.S. Centers for Disease Control and Prevention, the European Center for Disease Prevention and Control, the National Health Commission of the People’s Republic of China, 1point3acres, Worldometers.info, BNO, DYX, state and national health departments, and media reports. These organizations aggregate the data from national authorities, who aggregate the data from state and local health departments, who aggregate the data from various testing centers. Because of this long chain of data transfer, local data is likely to be more accurate and up-to-date than data reported in this dataset. See: [GitHub Page](https://github.com/CSSEGISandData/COVID-19)
+
+#### Hospitals in the US
+
+This data is published by the Department of Homeland Security on a platform called the [Homeland Infrastructure Foundation-Level Data](https://hifld-geoplatform.opendata.arcgis.com/). The data is compiled by a DHS team from the Oak Ridge National Laboratory (ORNL), the National Geospatial-Intelligence Agency (NGA), and the Homeland Security Infrastructure Program (HSIP) Team. The data is aggregated from hospital listings across over 100 different state departments and federal sources.  See: [Data Documentation](https://www.arcgis.com/sharing/rest/content/items/6ac5e325468c4cb9b905f1728d6fbf0f/info/metadata/metadata.xml?format=default&output=html)
+
+#### Health Economics Indicators
+
+I (Professor Poirier) aggregated several of the health economics indicators from a data publishing system called [Gapminder](https://www.gapminder.org/data/) in order to compile this dataset. Gapminder is an organization that aggregates statistics regarding global development from a number of reputable sources. The organization aims to dispel misconceptions about countries across the globe through these statistical sources. Most of the indicators that I aggregated from Gapminder were originally sourced through the World Health Organization's [Global Health Observatory](https://www.who.int/data/gho). The World Health Organization compiles this data in order to monitor financial resource flows within health systems across the globe. 
+
+#### Your dataset
+
+```{r eval=FALSE}
+Fill response here. 
+```
+
+### According to what procedures is the data collected?
+
+#### Covid-19 Case Counts 
+
+Covid-19 case count data is collected through laboratory testing that checks for the presence of Covid-19 in respiratory specimens and sometimes blood samples. There are a few different types of tests for Covid-19. These two are the most common:
+
+* Reverse transcription polymerase chain reaction tests (RT-PCR) analyze respiratory samples, swabbed from an individual, in order to detect virus RNA. They are sometimes known as genomic detection-based tests.
+* Serology tests analyze antibodies in blood samples to determine whether you have had the virus and your current immunity.  
+
+See: Edwards, Alexander. 2020. “COVID-19 Tests: How They Work and What’s in Development.” The Conversation. Accessed April 13, 2020. http://theconversation.com/covid-19-tests-how-they-work-and-whats-in-development-134479.
+
+These testing procedures must be approved for diagnostic purposes by government officials. Positive tests are reported to state and local health departments. 
+
+#### Hospitals in the US
+
+Members of the team aggregating this dataset at the DHS first reviewed PDFs, tables, and webpages listing hospitals from federal and state sources. They then cleaned the data (removing duplicates), geocoded the data, categorized each hospital, and stored the data in a geospatial database. See: [Data Documentation](https://www.arcgis.com/sharing/rest/content/items/6ac5e325468c4cb9b905f1728d6fbf0f/info/metadata/metadata.xml?format=default&output=html)
+
+#### Health Economics Indicators
+
+Most of the health economics indicators reported by the World Health Organization are based on [National Health Accounts (NHA)](https://www.who.int/health-accounts/en/). NHAs are accounts of how money is spent on health in a country, who is spending that money, and on what services they are spending that money. They are developed based on an internationally standardized process for health accounting developed by the Organization for Economic Cooperation and Development (OECD) known as the [System of Health Accounts](https://www.who.int/health-accounts/methodology/sha2011.pdf?ua=1). The WHO collects these accounts from individual countries. Budgeting and planning offices in individual countries produce this data by tracking all government expenditures related to health, as well as private and out-of-pocket expenditures. When a country does not maintain their NHAs, the WHO reaches out to in-country contacts and monitors reports to aggregate the numbers and synchronize them with NHA standards. Gapminder then aggregates this data from the WHO.
+
+See: Waldo, Daniel. 2018. “National Health Accounts: A Framework For Understanding Health Care Financing.” Health Affairs 37 (3): 498–503. https://doi.org/10.1377/hlthaff.2017.1629.
+
+#### Your dataset
+
+```{r eval=FALSE}
+Fill response here. 
+```
+
+### How long has the data been collected? Have there been any major changes to how the data gets collected since its inception?
+
+#### Covid-19 Case Counts 
+
+The Johns Hopkins research team first published a [dashboard](https://coronavirus.jhu.edu/map.html) presenting this data on January 21, 2020. While at first they were manually checking reported case count numbers on a daily basis, on February 1, 2020, they transitioned to a semi-automated process for checking case counts across sources. While this sped up aggregation, it also introduced new opportunities for error in the dataset, as well as [changes to the structure](https://github.com/CSSEGISandData/COVID-19/issues/52) of the dataset that other organizations were already relying on. With case count data streaming in from a variety of sources in each country, the Johns Hopkins team has to continuously make decisions about which data to trust, and at times has to [retroactively](https://github.com/CSSEGISandData/COVID-19/issues/2094) change reported numbers when new evidence is reported. 
+
+In addition, the actual testing of patients, which is how this data is initially collected, has changed considerably since January 2020. as a result of changing federal regulations restricting testing and supply chain shortages. We will talk more about these changes in Lab 7.
+
+#### Hospitals in the US
+
+While the [data documentation](https://www.arcgis.com/sharing/rest/content/items/6ac5e325468c4cb9b905f1728d6fbf0f/info/metadata/metadata.xml?format=default&output=html) does not indicate when this data was first published, we can see in the data that some of the values were sourced as early as June 2012. In an update sometime post-2017, each hospital's trauma-level designation was added to the dataset, along with whether the hospital had a helipad. See: [Data Documentation](https://www.arcgis.com/sharing/rest/content/items/6ac5e325468c4cb9b905f1728d6fbf0f/info/metadata/metadata.xml?format=default&output=html)
+
+#### Health Economics Indicators
+
+While efforts to come up with internationally standardized definitions for health accounting began in the 1980s, it wasn't until 2000 that the Organization for Economic Cooperation and Development (OECD) developed such an international health accounting system (called the System of Health Accounts, which I'll talk about more in a later section). This system was [updated](https://www.oecd-ilibrary.org/social-issues-migration-health/a-system-of-health-accounts_9789264116016-en) in 2011. Despite this, the dataset has values reported as far back as 1995.
+
+See: Waldo, Daniel. 2018. “National Health Accounts: A Framework For Understanding Health Care Financing.” Health Affairs 37 (3): 498–503. https://doi.org/10.1377/hlthaff.2017.1629.
+
+#### Your dataset
+
+```{r eval=FALSE}
+Fill response here. 
+```
+
+### Where is the data collected? How often is the data collected?
+
+#### Covid-19 Case Counts 
+
+This data is collected globally and is aggregated on a daily basis. Since the data is published on GitHub, members of the GitHub community regularly request for new countries to be represented in the data as new cases are reported. See: [GitHub Page](https://github.com/CSSEGISandData/COVID-19)
+
+#### Hospitals in the US
+
+The data is collected for hospitals throughout the United States, including Puerto Rico, Guam, Northern Mariana Islands, Palau, Virgin Islands, District of Columbia, and American Samoa. The data documentation does not indicate how often it is or will be updated. See: [Data Documentation](https://www.arcgis.com/sharing/rest/content/items/6ac5e325468c4cb9b905f1728d6fbf0f/info/metadata/metadata.xml?format=default&output=html)
+
+#### Health Economics Indicators
+
+This data is aggregated for almost all of the countries recognized by the World Health Organization across the globe on a yearly basis. 
+
+#### Your dataset
+
+```{r eval=FALSE}
+Fill response here. 
+```
+
+### Are there any laws that mandate the data to be collected? If so, what are they?
+
+#### Covid-19 Case Counts, Hospitals in the US, Health Economics Indicators
+
+There are currently not laws that specifically mandate the aggregation of the data reported in these three datasets. However, there are laws that implicate their data collection methods. For instance, in the US, the [Families First Coronavirus Response Act](https://www.kff.org/global-health-policy/issue-brief/the-families-first-coronavirus-response-act-summary-of-key-provisions/) mandates that employer-sponsored health plans provide coverage for Covid-19 testing. While there are not laws that require that countries produce NHAs, international organizations like the World Bank, the World Health Organization, and aid organization like USAID have have promoted the [institutionalization of NHAs](http://documents.worldbank.org/curated/en/410301468323088938/pdf/689660PUB0publ07926B009780821394694.pdf) by consulting with countries across the globe about the purported value proposition of NHAs - that they make health system more equitable and cost-effective by offering insights into where money is being spent and where the greatest burdens are. 
+
+#### Your dataset
+
+```{r eval=FALSE}
+Fill response here. 
+```
+
+### Have any social movements pushed for the data to be collected? How have these groups exerted influence over the data collection?
+
+#### Covid-19 Case Counts 
+
+Absolutely! Demands across the globe for governments to lift restrictions on testing have played an important role in the numbers that we see reported in this data. One area where we are seeing activism play a big role in the numbers reported in this data is in communities advocating for testing of incarcerated individuals, since social distancing and sanitation is much less accessible in prisons. See [this article](https://komonews.com/news/local/monroe-inmates-ask-state-supreme-court-to-order-immediate-covid-19-testing), for instance. [Healthcare workers](https://www.democracynow.org/2020/4/10/headlines/us_healthcare_workers_demand_protective_gear_in_national_day_of_action) have also protested demanding more regular testing. As we know the case counts reported in this data are dependent on testing so these social movements play an important role in the numbers that ultimately get reported. 
+
+#### Health Economics Indicators
+
+Advocates for the collection of National Health Accounts recognize its importance in advancing countries towards Universal Health Coverage (UHC), which the WHO defines as: "all people and communities can use the promotive, preventive, curative, rehabilitative and palliative health services they need, of sufficient quality to be effective, while also ensuring that the use of these services does not expose the user to financial hardship."
+
+see: “WHO | What Is Universal Coverage?” 2020. WHO. World Health Organization. Accessed April 11, 2020. http://www.who.int/health_financing/universal_coverage_definition/en/.
+
+Often activism promoting/demanding UHC cites data reported in National Health Accounts.
+
+#### Your dataset
+
+```{r eval=FALSE}
+Fill response here. 
+```
+
+### What technologies, algorithms, or other datasets are needed to produce this dataset?
+
+#### Covid-19 Case Counts 
+
+The Johns Hopkins research team relies on other data streams across the globe in order to aggregate this data. In the process, they have to use judgment to decide which sources of data are reputable and what to do when conflicting numbers are reported across streams. Case count data is also dependent on the availability of testing equipment, and [shortages](https://www.nytimes.com/2020/04/06/health/coronavirus-testing-us.html) of testing materials and agents can have a significant impact on the numbers reported in the data.
+
+#### Hospitals in the US
+
+To produce this hospitals dataset, the DHS team were dependent on other federal and state organizations that already had listings of hospitals, as well as geospatial software for encoding and presenting hospital locations.
+
+#### Health Economics Indicators
+
+To produce the values reported in National Health Accounts, countries follow a process known as a System of Health Accounts, which standardizes how countries go about recording health expenditures so that they may be comparable at an international level. The saltest version of this accounting method is documented in a [522-page manual](https://www.oecd-ilibrary.org/docserver/9789264270985-en.pdf?expires=1586655711&id=id&accname=guest&checksum=4CB3AD01FF5BB5C258060BD4AB133B9D). Since different countries have different cultures, politics, financial, and statistical systems, their methods for producing data about health expenditures are also different. The manual standardizes processes for measuring healthcare governance, resource generation, human resources, medical products and technology, capital goods, financing, and service delivery and defines common classification systems for health accounting. The System of Health Accounts presents a set of tables into which all countries should report various components of health spending, according to the standardized definitions outlined in this manual.
+
+To help facilitate the data aggregation and estimation, some countries rely on the [NHA Production Tool](https://www.who.int/health-accounts/tools/HAPT/en/) - software funded by the USAID, and developed with guidance from the WHO and the World Bank, to guide countries through the process of producing their NHA.
+
+Having access to the data inputs for this type of accounting also demands that countries have widespread health record-keeping capacities for tracking expenditures, and human resources skilled in data management and statistical analysis.
+
+#### Your dataset
+
+```{r eval=FALSE}
+Fill response here. 
+```
+
+### List any expenses that you can anticipate being involved in producing this data. Who pays for these expenses?
+
+#### Covid-19 Case Counts 
+
+With many stakeholders and technologies involved this data production, the cost of producing this data is enormous. First, we should consider the work of the individuals composing the research team at Johns Hopkins. They have graciously devoted an incredible amount of time to make this a public resource, and while the work they've put into it likely cannot be reduced to a standard work week, the costs of their human labor should be factored into the cost of this data production. 
+
+See: Kaiser, Jocelyn. 2020. “‘Every Day Is a New Surprise.’ Inside the Effort to Produce the World’s Most Popular Coronavirus Tracker.” Science | AAAS. April 6, 2020. https://www.sciencemag.org/news/2020/04/every-day-new-surprise-inside-effort-produce-world-s-most-popular-coronavirus-tracker.
+
+Then, we should consider all of the infrastructure needed to support data storage and flows - servers to host data, web platforms where case counts are shared, in-country communications channels to get data from local and state departments to national health authorities. At every stage of data transfer, there are salaries to be paid for individuals that maintain this data storage and networking infrastructure. 
+
+Then, there are the tests: We need to consider the human labor costs of all of the healthcare staff responsible for administering tests, the lab technicians responsible for analyzing tests, the public health authorities responsible for overseeing testing, the legal authorities responsible for setting testing mandates, the packaging and shipping workers responsible for distributing supplies and transporting specimens to labs, and the individuals employed in the various industries where the testing supplies are manufactured. I'm sure that we can continue to grow this list. 
+
+Tests themselves cost money. In the US, the Families First Coronavirus Response Act aims to ensure that individuals with or without insurance will not have to pay for these tests. Instead insurers will be required to pay for tests of those they insure, while public funds will cover the cost of tests for those without insurance. Out-of-pocket fees may still incur when tests are performed in out-of-network labs. The cost of the actual tests depends on the kind of testing being performed. 
+
+See: Abrams, Abigail. 2020. “COVID-19 Testing Is Supposed to Be Free. Here’s Why You Might Still Get Billed.” Time. March 20, 2020. https://time.com/5806724/coronavirus-testing-costs/.
+
+> Tracking the billing of Covid-19 testing has become so onerous over the past few months that the US Centers for Medicare and Medicaid Services issued a new Healthcare Common Procedural Coding System (HCPCS) code for Covid-19 diagnostic services, as well as a new Current Procedural Terminology (CPT) code. These standardized codes can be used when labs and hospitals bill for Covid-19 related procedures. With every lab and hospital using the same code to track Covid-19 related billing, it becomes possible to track how much healthcare money was spent on the virus and by whom. Sound familiar? Such codes are one of the many tools used to coordinate data collection on health expenditures for National Health Accounts.
+
+#### Hospitals in the US
+
+Since the hospitals dataset was aggregated by a team at the Department of Homeland Security, there were human labor costs of data aggregation. The team relied on geocoding services to convert addresses into geographic coordinates, as well as ArcGIS software to map the data, both of which cost money.
+
+#### Health Economics Indicators
+
+National Health Accounts can be costly to produce, requiring that countries invest in statisticians, health accountants, health economists, and at times international consultants. If countries don't have standards for health accounting already embedded into their healthcare system, they need to perform surveys to collect health accounting data - at both the household and the private sector level. Such surveys cost money to produce, distribute, and collect. Such costs need to be factored into national budgeting processes.
+
+See: Maeda, Akiko, Margareta Norris Harrit, Shunsuke Mabuchi, Banafsheh Siadat, and Somil Nagpal. 2012. Creating Evidence for Better Health Financing Decisions. Directions in Development - General. The World Bank. https://doi.org/10.1596/978-0-8213-9469-4.
+
+There are human labor costs to maintaining the System of Health Accounts, as well as to aggregating National Health Accounts from individual countries to include in the Global Health Observatory's dataset, as well as to aggregating the GHO's data into Gapminder. There are also data storage and networking costs at every moment in the data's lifecycle.
+
+#### Your dataset
+
+```{r eval=FALSE}
+Fill response here. 
+```
+
+### How long has this dataset been public? Under what circumstances was this dataset made public? Through what channels has the dataset been made available to the public?
+
+#### Covid-19 Case Counts 
+
+The Johns Hopkins team published this data on January 22, 2020 - both through a [public GitHub repository](https://github.com/CSSEGISandData/COVID-19) and through a [data dashboard](https://www.arcgis.com/apps/opsdashboard/index.html#/bda7594740fd40299423467b48e9ecf6) visualizing the spread.
+
+#### Hospitals in the US
+
+The hospitals dataset has been made public on the Homeland Infrastructure Foundation-Level Data (HIFLD) platform, which hosts a number of geospatial datasets regarding US national assets.  It is unclear from the data documentation when it was made public. 
+
+#### Health Economics Indicators
+
+The health economics indicators dataset has been made public through Gapminder. This Swedish organization aims to aggregate global data indicators in easy-to-use formats in order to combat "ignorance about the world."
+
+See: [https://www.gapminder.org/about-gapminder/](https://www.gapminder.org/about-gapminder/)
+
+The has also been made public (and was aggregated from) the WHO's Global Health Observatory. This data repository was made available to the public in 2012 in order to support statisticians, public health officials, and members of the public interested in assessing global health in accessing information about diseases and global health measures.
+ 
+#### Your dataset
+
+```{r eval=FALSE}
+Fill response here. 
+```
+
+### Do any institutions leverage the dataset to support decision-making? Which institutions, and which decisions?
+
+#### Covid-19 Case Counts 
+
+The production of data about confirmed cases has been a significant part of the public discourse around the spread of the virus. Why has data been so central to this virus? The reasons are almost too many to count and seem to multiply each day. Here are just a few:
+
+* In helping to indicate the degree to which the virus has spread throughout a community, data about confirmed cases has helped federal regulators, states, counties, and local authorities discern when they need to establish protocols for social distancing and business closures. 
+* Data has been an important component of the public relations strategy, helping to communicate the urgency to communities to practice social distancing and to honor shelter-in-place protocols. 
+* Data about confirmed cases has helped to indicate which hospitals are likely to face shortages in beds, respirators, and personal protective equipment. This helps authorities predict how they may need to redistribute resources and hospitals make decisions about purchasing, healthcare worker schedules, and how to reconfigure hospital set-ups for patient intake. 
+* Data about the Covid-19 confirmed cases has helped policy-makers determine when they need to pass legislation to protect citizens from exorbitant healthcare costs. 
+* Banks rely on data about confirmed cases to determine the extent to which gross domestic product will fall as a result of the virus and what impact it will have on the economy.
+* Your university is relying on data about confirmed cases to plan for the longevity of remote teaching and whether institutional events will need to be cancelled.
+
+This list could be considerably expanded. 
+
+#### Health Economics Indicators
+
+The list of uses of National Health Accounts data in decision-making is also considerably long:
+
+* Governments use NHA data to make decisions about how changes to investments in healthcare, including human resources, technology procurement, pharmaceuticals, and capital expenditures, may help them to meet national healthcare objectives. 
+* Economists use NHA data to track the growth in medical expenditures in individual countries and worldwide over time. 
+* Organizations like the World Health Organization and the World Bank use the data to assess the burden of healthcare costs that individual households face, indicating the degree of social vulnerability communities in a particular country face in relation to healthcare costs (particularly in the wake of public health crises). 
+* NHAs in some countries are used to indicate progress towards the United Nations' [Millenium Development Goals](https://www.un.org/millenniumgoals/).
+* Governments also use NHAs to determine the extent to which their efforts to reform healthcare positively impact community health equity. 
+
+See: OECD, Eurostat, and World Health Organization. 2017. “A System of Health Accounts 2011.” https://www.oecd-ilibrary.org/content/publication/9789264270985-en.
+
+In addition, to the above uses, Gapminder promotes the aggregated data primarily as a tool for teaching statistics.
+
+#### Your dataset
+
+```{r eval=FALSE}
+Fill response here. 
+```
+
+### How has this dataset been talked about in the media?
+
+#### Covid-19 Case Counts 
+
+There are many different organizations tracking confirmed cases of Covid-19, but the Johns Hopkins dataset is often referenced as the most up-to-date and comprehensive. It has primarily been *applauded* in the media by a number of sources. Just a few are listed below:
+
+* [New York Magazine](https://nymag.com/intelligencer/2020/04/jhus-coronavirus-site-gets-1-2-billion-interactions-a-day.html)
+* [NPR](https://www.npr.org/2020/04/13/833073670/mapping-covid-19-millions-rely-on-online-tracker-of-cases-worldwide)
+* [Science Magazine](https://www.sciencemag.org/news/2020/04/every-day-new-surprise-inside-effort-produce-world-s-most-popular-coronavirus-tracker)
+
+#### Hospitals in the US
+
+I have only found one news article citing the HIFLD hospitals dataset: this [Forbes article](https://www.forbes.com/sites/sorensonimpact/2020/04/10/covid-19-and-social-impact/#1f4e43b4546b) presenting data analysis of the Covid-19 Social Impact. However, the number of beds available in hospitals has been cited widely in the news recently, including in the following articles:
+
+* [Vox](https://www.vox.com/science-and-health/2020/3/14/21179714/coronavirus-covid-19-hospital-beds-china)
+* [Washington Post](https://www.washingtonpost.com/health/2020/03/13/coronavirus-numbers-we-really-should-be-worried-about/)
+* [The Atlantic](https://www.theatlantic.com/science/archive/2020/03/coronavirus-hospitals-need-more-beds/608677/)
+
+Each of these articles relies on a different dataset documenting hospital beds - an [OECD dataset](https://data.oecd.org/healtheqt/hospital-beds.htm) that reports the number of hospital beds available per 1000 people in each country. 
+
+#### Health Economics Indicators
+
+National Health Accounts data appear in international news fairly regularly. The statistics reported through National Health Accounts in a given country are often referenced during public health crises to document who is paying for healthcare services in the country - the government, private companies, or households. In this sense, the data is leveraged to document the degree of social vulnerability to healthcare costs in a country. National Health Accounts data has been referenced a number of times in news articles related to Covid-19. See, for instance, these articles on:
+
+* [India](http://www.businessworld.in/article/COVID-19-Will-Test-India-s-Preparedness-To-Tackle-Health-Emergency/23-03-2020-186921/)
+* [Nigeria](https://allafrica.com/stories/202004060984.html)
+* [Burundi](https://regionweek.com/key-facts-you-should-know-about-the-burundi-health-system/)
+
+#### Your dataset
+
+```{r eval=FALSE}
+Fill response here. 
+```
+
+### Which people, places, things, or issues may be over-represented in the data? Why? Which people, places, things, or issues may be under-represented in the data? Why?
+
+#### Covid-19 Case Counts 
+
+We know that this data only reflects confirmed cases of those individuals that have been tested for the virus and cannot account for those that have not been tested. But who is getting tested? This [Atlantic article](https://www.theatlantic.com/ideas/archive/2020/04/coronavirus-exposing-our-racial-divides/609526/) points out a number of issues in relation to this, indicating that:
+
+* testing can be scarce in rural communities.
+* undocumented immigrants may choose not to get tested to avoid deportation or detainment in centers where the virus is known to be spreading
+
+Under these conditions, confirmed cases in these communities are likely to be much higher than what is reported in the data.
+
+In spite of barriers to testing, we still see that people of color are being infected with and dying from the virus at much higher rates.  
+
+#### Hospitals in the US
+
+Only hospitals reported by state and federal agencies are included in the HIFLD hospitals dataset. The dataset excludes nursing homes and health centers. 
+
+#### Health Economics Indicators
+
+In countries where processes for health accounting have already been integrated into systems of data collection throughout the healthcare system, the values reported in National Health Accounts are likely to be much more comprehensive and accurate. Countries that do not currently have such standards and processes integrated throughout their healthcare system rely to a far greater extent on estimation methods and surveys to aggregate NHA data. Because of the costs associated with producing NHAs - which can be higher for those countries that do not currently have accounting processes integrated into the healthcare system - accounting has been slower to emerge among st lower to middle income countries.
+
+See: Price, Jennifer A., Lorna Guinness, Wayne Irava, Idrish Khan, Augustine Asante, and Virginia Wiseman. 2016. “How to Do (or Not to Do) … Translation of National Health Accounts Data to Evidence for Policy Making in a Low Resourced Setting.” Health Policy and Planning 31 (4): 472–81. https://doi.org/10.1093/heapol/czv089.
+
+
+#### Your dataset
+
+```{r eval=FALSE}
+Fill response here. 
+```
+
+
+
