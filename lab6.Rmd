@@ -20,6 +20,7 @@ In this lab, we will practice calculating and interpreting measures of central t
 ## Getting Started
 
 ### Load the relevant libraries
+
 ```{r}
 library(tidyverse)
 library(lubridate)
@@ -29,8 +30,9 @@ library(shinyWidgets)
 ```
 
 ### Import and clean example datasets 
+
 ```{r}
-hospitals <- read.csv("https://raw.githubusercontent.com/lindsaypoirier/STS-115/master/datasets/Hospitals.csv", stringsAsFactors = FALSE)
+hospitals <- read.csv("https://opendata.arcgis.com/datasets/6ac5e325468c4cb9b905f1728d6fbf0f_0.csv", stringsAsFactors = FALSE)
 
 world_health_econ <- read.csv("https://raw.githubusercontent.com/lindsaypoirier/STS-115/master/datasets/world_health_econ.csv", stringsAsFactors = FALSE)
 
@@ -58,7 +60,8 @@ hospitals$SOURCEDATE <- ymd_hms(hospitals$SOURCEDATE)
 hospitals$VAL_DATE <- ymd_hms(hospitals$VAL_DATE)
 ```
 
-### Import and clean your dataset. 
+### Import and clean your dataset
+
 ```{r}
 #Copy and paste relevant code from Lab 4 to import your data here. 
 
@@ -188,7 +191,7 @@ This is because when we take an average of averages, we are ignoring a key confo
 
 Please watch this short video on Simpon's Paradox to learn more about the importance of avoiding this pitfall:
 
-<iframe width="560" height="315" src="https://youtu.be/embed/ebEkn-BiW5k" frameborder="0" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/ebEkn-BiW5k" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 This is an issue we would need to keep in mind when calculating measures of central tendency in our world_health_econ dataset. The majority of the variables reported in the world_health_econ dataset are already averages - either averages across the population of the country or averages across the country's total spending on health. Because of this, it would be inappropriate to calculate measures of central tendency across these variables without knowing their denominators. 
 
@@ -328,6 +331,7 @@ Even though we are introducing the boxplot in relation to quartile deviation, it
 The further the 1st and 3rd quartile are from the median (or, in other words, the wider the box), the greater the *quartile deviation.* In general, a narrower box and whiskers indicates less dispersion in the data, while a wider box and whiskers indicates greater dispersion.  
 
 Let's use a boxplot to check out the quartile deviation of beds in open general acute care hospitals in the US.
+
 ```{r fig.height=5, fig.width=5}
 #df %>% ggplot(aes(y = NUMERIC_VARIABLE)) + geom_boxplot() + theme_bw()
 
@@ -358,7 +362,8 @@ hospitals %>%
 
 #### Select one of the numeric variables on which you calculated a measure of central tendency above, and calculate the maximum value, the minimum value, and the range of values within that variable.
 
-Be sure to filter your dataset to ensure that you are summarizing across similar observations. 
+Be sure to filter your dataset to ensure that you are summarizing across similar observations.
+
 ```{r}
 #Fill your code to calculate max here. 
 
@@ -382,6 +387,7 @@ Fill your response here.
 #### Create a boxplot for one of the numeric variables on which you calculated a measure of central tendency above.
 
 Be sure to filter your dataset to ensure that you are plotting across similar observations. 
+
 ```{r fig.height=5, fig.width=5}
 #Fill your plot here. Be sure to add a title and labels to your plot. 
 ```
@@ -402,6 +408,7 @@ Fill your response here.
 ### Calculate the standard deviation for one of the numeric variables on which you calculated a measure of central tendency above.
 
 Be sure to filter your dataset to ensure that you are summarizing across similar observations. 
+
 ```{r}
 #Fill your code here.
 ```
@@ -445,6 +452,7 @@ hospitals %>%
   coord_flip() #Flips the x and y axis to make the data easier to read and compare
 
 ```
+
 We can also filter our data to similar values and the compare dispersions across another category. 
 
 ```{r fig.height=5, fig.width=10}
@@ -483,6 +491,7 @@ We can see above how the distribution in the second plot is a bit more normal th
 ### Create a grouped boxplot for your dataset below.
 
 Be sure to filter your dataset to ensure that you are summarizing across similar observations **or** ensure that each group is made up of similar observations. 
+
 ```{r fig.height=5, fig.width=10}
 #Fill your code here. Add a title and labels to your plot. 
 ```
@@ -506,10 +515,12 @@ Now we will incorporate some of the values we calculated and some of the plots w
 ```{r}
 ui <- dashboardPage(
   
+  #REPLACE 'TITLE HERE' BELOW WITH YOUR OWN TITLE
   dashboardHeader(title = "TITLE HERE"),
+  #REPLACE 'TITLE HERE' ABOVE WITH YOUR OWN TITLE
   
   dashboardSidebar(
-    #EVENTUALLY INPUTS WILL GO HERE. 
+    #inputs will go here eventually but not now. 
   ),
   
   dashboardBody(
@@ -526,51 +537,100 @@ ui <- dashboardPage(
 
 ```
 
+In the designated areas below, replace my code with your own code. You may use the same two plots that you used in the last lab for two of the plots below.
 
 ```{r}
 server <- function(input, output, session) {
   
   output$value1 <- renderInfoBox({
-    quant_insight1 <- 0
-    #Replace '0' above with the code for one of the values you calculated above. Replace 'FILL DESCRIPTION HERE' with a brief description of this number.  
+    quant_insight1 <-
+    #REPLACE BELOW WITH YOUR OWN CODE
+    hospitals %>% 
+      filter(STATUS == "OPEN" & TYPE == "GENERAL ACUTE CARE") %>%
+      summarize(median_value = median(BEDS, na.rm = TRUE))
+    #REPLACE ABOVE WITH YOUR OWN CODE
+    
+    #REPLACE 'FILL DESCRIPTION HERE' BELOW WITH YOUR OWN DESCRIPTION
     infoBox(quant_insight1,'FILL DESCRIPTION HERE', icon = icon("stats", lib='glyphicon'), color = "purple")
+    #REPLACE 'FILL DESCRIPTION HERE' ABOVE WITH YOUR OWN DESCRIPTION
   })
   
   output$value2 <- renderInfoBox({
-    quant_insight2 <- 0
-    #Replace '0' above with the code for one of the values you calculated above. Replace 'FILL DESCRIPTION HERE' with a brief description of this number.  
+    quant_insight2 <- 
+    #REPLACE BELOW WITH YOUR OWN CODE
+    hospitals %>% 
+      filter(STATUS == "OPEN" & TYPE == "GENERAL ACUTE CARE") %>%
+      summarize(median_value = median(BEDS, na.rm = TRUE))
+    #REPLACE ABOVE WITH YOUR OWN CODE 
+    
+    #REPLACE 'FILL DESCRIPTION HERE' BELOW WITH YOUR OWN DESCRIPTION
     infoBox(quant_insight2,'FILL DESCRIPTION HERE', icon = icon("stats", lib='glyphicon'), color = "purple")
+    #REPLACE 'FILL DESCRIPTION HERE' ABOVE WITH YOUR OWN DESCRIPTION
   })
   
   output$value3 <- renderInfoBox({
-    quant_insight3 <- 0
-    #Replace '0' above with the code for one of the values you calculated above. Replace 'FILL DESCRIPTION HERE' with a brief description of this number.  
+    quant_insight3 <- 
+    #REPLACE BELOW WITH YOUR OWN CODE
+    hospitals %>% 
+      filter(STATUS == "OPEN" & TYPE == "GENERAL ACUTE CARE") %>%
+      summarize(median_value = median(BEDS, na.rm = TRUE))
+    #REPLACE ABOVE WITH YOUR OWN CODE 
+    
+    #REPLACE 'FILL DESCRIPTION HERE' BELOW WITH YOUR OWN DESCRIPTION
     infoBox(quant_insight3,'FILL DESCRIPTION HERE', icon = icon("stats", lib='glyphicon'), color = "purple")
+    #REPLACE 'FILL DESCRIPTION HERE' ABOVE WITH YOUR OWN DESCRIPTION
   })
   
   
   output$plot1 <- renderPlot({
-    hospitals %>% ggplot(aes(x = TYPE)) + geom_bar()
-    #Replace plot above with your own plot. 
+    #REPLACE BELOW WITH YOUR OWN PLOT
+    hospitals %>% 
+      filter(STATUS == "OPEN") %>%
+      ggplot(aes(x = TYPE)) + 
+      geom_bar() +
+      labs(title = "Number of Hospitals in the US that are Open by Type", x = "Type", y = "Count of Hospitals") + 
+      theme_bw() +
+      theme(axis.text.x = element_text(angle = 90, hjust=1)) 
+    #REPLACE ABOVE WITH YOUR OWN PLOT 
     
   })
   
   output$plot2 <- renderPlot({
-    hospitals %>% ggplot(aes(x = TYPE)) + geom_bar()
-    #Replace plot above with your own plot. 
+    #REPLACE BELOW WITH YOUR OWN PLOT
+    hospitals %>% 
+      filter(STATUS == "OPEN") %>%
+      ggplot(aes(x = TYPE)) + 
+      geom_bar() +
+      labs(title = "Number of Hospitals in the US that are Open by Type", x = "Type", y = "Count of Hospitals") + 
+      theme_bw() +
+      theme(axis.text.x = element_text(angle = 90, hjust=1)) 
+    #REPLACE ABOVE WITH YOUR OWN PLOT 
   })
   
   output$plot3 <- renderPlot({
-    hospitals %>% ggplot(aes(x = TYPE)) + geom_bar()
-    #Replace plot above with your own plot. 
+    #REPLACE BELOW WITH YOUR OWN PLOT
+    hospitals %>% 
+      filter(STATUS == "OPEN") %>%
+      ggplot(aes(x = TYPE)) + 
+      geom_bar() +
+      labs(title = "Number of Hospitals in the US that are Open by Type", x = "Type", y = "Count of Hospitals") + 
+      theme_bw() +
+      theme(axis.text.x = element_text(angle = 90, hjust=1)) 
+    #REPLACE ABOVE WITH YOUR OWN PLOT  
     
   })
   
   output$plot4 <- renderPlot({
-    hospitals %>% ggplot(aes(x = TYPE)) + geom_bar()
-    #Replace plot above with your own plot. 
+    #REPLACE BELOW WITH YOUR OWN PLOT
+    hospitals %>% 
+      filter(STATUS == "OPEN") %>%
+      ggplot(aes(x = TYPE)) + 
+      geom_bar() +
+      labs(title = "Number of Hospitals in the US that are Open by Type", x = "Type", y = "Count of Hospitals") + 
+      theme_bw() +
+      theme(axis.text.x = element_text(angle = 90, hjust=1)) 
+    #REPLACE ABOVE WITH YOUR OWN PLOT  
   })
-  
 }
 ```
 
@@ -580,9 +640,10 @@ shinyApp(ui, server)
 ```
 
 --- 
-# ASSIGNMENT ENDS HERE. 
+
+## ASSIGNMENT ENDS HERE: More examples and Useful Functions
+
 --- 
-## More examples and Useful Functions (This is only for reference.)
 
 ### stat_summary()
 

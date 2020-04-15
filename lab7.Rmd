@@ -29,8 +29,9 @@ library(shinyWidgets)
 ```
 
 ### Import and clean example datasets 
+
 ```{r}
-hospitals <- read.csv("https://raw.githubusercontent.com/lindsaypoirier/STS-115/master/datasets/Hospitals.csv", stringsAsFactors = FALSE)
+hospitals <- read.csv("https://opendata.arcgis.com/datasets/6ac5e325468c4cb9b905f1728d6fbf0f_0.csv", stringsAsFactors = FALSE)
 
 world_health_econ <- read.csv("https://raw.githubusercontent.com/lindsaypoirier/STS-115/master/datasets/world_health_econ.csv", stringsAsFactors = FALSE)
 
@@ -59,6 +60,7 @@ hospitals$VAL_DATE <- ymd_hms(hospitals$VAL_DATE)
 ```
 
 ### Import and clean your dataset. 
+
 ```{r}
 #Copy and paste relevant code from Lab 4 to import your data here. 
 
@@ -103,7 +105,6 @@ Let's also facet data by a temporal variable. Assuming we have already converted
 * month(DATE_VARIABLE) will extract the month from the date
 * day(DATE_VARIABLE) will extract the day from the date
 * ... and so on
-
 
 ```{r fig.height=5, fig.width=10}
 #without facet_wrap()
@@ -172,16 +173,84 @@ Fill your response here.
 
 ## The Importance of Place and Time
 
-Time and place often matter a great deal in how we interpret data. To get us started in thinking about why, let's walk through a few examples:
+Time and place often matter a great deal in how we interpret data. Let me provide a few examples that demonstrate why:
 
-### Case Study 1: Covid-19 Case Reporting by Country
+### Case Study 1: Chrono-politics of Calls to 311 during Hurricane Sandy
+
+311 is basically a customer service number for cities - a number for residents and visitors to report non-emergency issues, such as potholes and graffiti, to city officials. In most cities, every call to 311 gets aggregated in a database, and increasingly, city officials are performing data analysis on the calls to figure out where certain issues in the city are concentrated. If they receive a number of calls about missed garbage pick-ups in a certain community, they may divert attention and resources there for improved sanitation. Often this data is publicly accessible for communities to analyze. 
+
+When Hurricane Sandy hit NYC in 2012, the City leveraged data about calls New Yorkers had made to 311 to track where a number of different issues were occurring. I've included a sample of that data regarding calls about damaged trees and lack of heat and hot water in apartments in a dataset below.
+
+```{r}
+library(scales)
+nyc311 <- read.csv("https://github.com/lindsaypoirier/STS-115/blob/master/datasets/311_before_2015.csv?raw=true", stringsAsFactors = FALSE) 
+nyc311 %>% head(10)
+```
+
+Visualizing data about 311 calls in the three months following the disaster indeed showed a spike in complaints about issues like damaged trees and lack of heat in apartment buildings throughout the city. Leveraging this data, the city was able to position the devastation of the disaster as episodic - a result of natural forces beyond their control.
+
+```{r fig.height=5, fig.width=10}
+nyc311 %>% 
+  filter(year(Created.Date) == 2012 & month(Created.Date) %in% c(7:11)) %>%
+  ggplot(aes(x = as.Date(Created.Date), group = 1)) +
+  geom_vline(xintercept=as.Date(c("2012-10-29")),linetype=4, colour="black") +
+  geom_line(stat="count") + 
+  facet_wrap(~Complaint.Type) + 
+  labs(x="Month", y="Count") +
+  scale_x_date() +
+  theme_bw() +
+  annotate(geom = "label", x = as.Date("2012-10-29"), y = 4000, label = "Hurricane Sandy", angle = 90)
+```
+
+However, social researchers have argued that it is not so simple to delimit the temporal boundaries of a disaster. While a natural event may happen on a particular day or span of days, the structural conditions of the communities they impact have much longer timespans. Natural events occurring in delimited periods of time often exacerbate existing social issues like poverty, lack of affordable housing, and unequal access to healthcare. 
+
+Let's zoom out on the 311 data to look at these issues over the course of years versus these three months.  Complaints to 311 about damaged trees do spike following most major natural events. However, complaints about lack of heat in apartments spike every year in October ...because in New York, that's when it gets cold. By only looking at the data in months immediately after the disaster, the city could obscure the big picture - that poor New Yorkers face apartment negligence every year, not just immediately following a hurricane. The temporal context in which we analyze data matters a great deal for how we interpret it. 
+
+```{r fig.height=5, fig.width=10}
+nyc311 %>% 
+  ggplot(aes(x=as.Date(Created.Date), col=as.factor(year(Created.Date)), group = year(Created.Date))) +
+  geom_vline(xintercept=as.Date(c("2010-03-12","2010-09-16","2011-08-28","2011-10-29","2012-10-29")),linetype=4, colour="black") +
+  geom_line(stat = "count") + 
+  facet_wrap(~Complaint.Type) +
+  labs(x="Month", col="Year") +
+  scale_x_date(breaks = "3 months", labels=date_format("%b-%y")) +
+  theme_bw() +
+  annotate(geom = "label", x = as.Date("2010-03-12"), y = 4000, label = "nor'easter", angle = 90) +
+  annotate(geom = "label", x = as.Date("2010-09-16"), y = 4000, label = "tornadoes", angle = 90) +
+  annotate(geom = "label", x = as.Date("2011-08-28"), y = 4000, label = "Hurricane Irene", angle = 90) +
+  annotate(geom = "label", x = as.Date("2011-10-29"), y = 4500, label = "Halloween nor'easter", angle = 90) +
+  annotate(geom = "label", x = as.Date("2012-10-29"), y = 4000, label = "Hurricane Sandy", angle = 90)
+  #nor'easter, tornadoes, Irene, Halloween nor'easter, Sandy
+```
+
+> See: Liboiron, Max. 2015. “Disaster Data, Data Activism: Grassroots Responses to Representing Superstorm Sandy.” In Extreme Weather and Global Media, edited by Julia Leyda and Diane Negra. Taylor & Francis Group. https://doi.org/10.4324/9781315756486-7.
+
+### Case Study 2: Geo-politics of Calls to 311 during Hurricane Sandy
+
+```{r}
+library(leaflet)
+
+nyc311 %>%
+  filter(Created.Date > "2012-10-28" & Created.Date < "2012-10-30" & Complaint.Type == "Damaged Tree") %>%
+  leaflet() %>% 
+  addProviderTiles(providers$CartoDB.Positron) %>%
+  addMarkers(~Longitude, ~Latitude, clusterOptions = markerClusterOptions())
+```
+
+
+### Case Study 3: Covid-19 Case Reporting by Country
 
 Let's take a look at the number of Covid-19 cases reported each day by each country. To do so, we will be reimporting the cases data as a time series - that is, as a dataset that reports the number of cases per day. On import, every column represents a specific date and the case totals for that date are the values stored in that column. 
+
 ```{r}
 cases_time_series <- read.csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv", stringsAsFactors = FALSE)
 
 head(cases_time_series)
 ```
+
+#### Aside: Tidying Data with Gather 
+
+##### This section is just FYI. You may skip it if not interested
 
 Note how the column headers are formatted above. When dates are stored as column names and not as values in and of themselves, it can be very difficult to manipulate the data based on dates. Remember that column names are not data in and of themselves but a reference to a vector of values. The dates in this dataset are a reference to a vector of case numbers. Because the date values are not represented *in* the data, but only as a reference to case numbers, we can't filter observations to specific dates or to dates that happened before or after another date. The code below reshapes the data so that such filtering is possible.  Using **gather()**, for every province/country in the dataset, a new row will be created in the dataset for every date data was reported. The reshaped data will have two new columns: Case.Date (the date reported) and Cases (the number reported on that date). Basically, we will take wide data (many columns with fewer rows), and reshape it into long data (fewer columns with more rows). 
 
@@ -197,6 +266,8 @@ cases_time_series <- cases_time_series %>%
 
 head(cases_time_series)
 ```
+
+##### Rejoin here if you skipped the section above.
 
 Now let's plot the total number of cases reported each day, faceted by country. (This may take a bit of time to load.)
 
@@ -221,7 +292,7 @@ Characterize the geopolitics in your own dataset. Why might it be important to c
 Fill your response here.
 ```
 
-### Case Study 2: Covid-19 Cases over Time
+### Case Study 4: Covid-19 Cases over Time
 
 Now let's look at a time series of cases reported in the US. 
 
@@ -285,13 +356,15 @@ deaths %>%
   scale_x_continuous(trans='log10', labels =  scales::comma) +
   scale_y_continuous(trans='log10', labels = scales::comma)
 ```
+
 Keep in mind that each dot above represents a country. Before we make any assumptions about the causal relationship between these two variables, there are number of confounding variables to consider:
-* What is the median age of the population in the country
-* How advanced is the country's healthcare system
-* To what extent do citizens in the country have access to healthcare
-* How soon were social distancing policies put into place in the country
-* How is the country documenting a Covid-19 related case/death
-* Not to mention the geopolitics and chronopolitics we described above
+
+* What is the median age of the population in the country?
+* How advanced is the country's healthcare system?
+* To what extent do citizens in the country have access to healthcare?
+* How soon were social distancing policies put into place in the country?
+* How is the country documenting a Covid-19 related case/death?
+* Not to mention the geopolitics and chronopolitics we described above?
 
 Can you come up with others?
 
@@ -302,6 +375,7 @@ When comparing certain phenomena across places - particuarly phenomena that are 
 Consider another example. In 2018, I was at a conference in Brooklyn, listening to a representative from MasterCard discuss the importance of opening up data and getting it into the hands of community members to anaylze. A health practitioner from NYC's Department of Mental Health and Hygeine stood up to voice his concerns to the speaker. He said that it worries him that untrained community members may draw poor assumptions from the data. He described a dataset that documented the number mental health discharges by neighborhood in New York, and how it indicated that there were far more discharges in low income communities. This, he went on, could potentially lead someone to conclude that poor people are more likely to experience mental health issues or to instigate gun violence. However, he went on to assert that many community members might not know just from looking at the data that there are far more mental health hospitals in low income communities in NYC than in higher income communities. ...and that this is often because higher income communities have more power to lobby for keeping such hospitals out of their backyards! In this case, the practitioner was expressing concern that community members may not consider a significant confounding variable mediating the number of mental health discharges across NYC communities: the number of hospitals in each community. 
 
 In what ways might the distinct sizes or populations of a place impact how you compare issues across your data?
+
 ```{r eval=FALSE}
 Fill your response here.
 ```
@@ -318,11 +392,10 @@ While ICD-11 does have a classification for Covid-19, ICD-10 does not, and ICD-1
 
 When we're working with data, these issues can matter a great deal. When classifications change in our data, i.e. when new terms become available, when categories break into two, or when signifers are removed, it also changes how we interpret quantities represented in the data. 
 
-For instance, when I worked for NYC's civic data team, I would regularly work with open 311 data. 311 is basically a customer service number for cities - a number for residents and visitors to report non-emergency issues, such as potholes and graffiti, to city officials. In most cities, every call to 311 gets aggregated in a database, and increasingly, city officials are performing data analysis on the calls to figure out where certain issues in the city are concentrated. If they receive a number of calls about missed garbage pick-ups in a certain community, they may divert attention and resources there for improved sanitation. Often this data is publicly accessible for communities to analyze. 
-
-Every 311 call is coded with a certain category, such as Noise, No Heat and Hot Water in Building, Rat Sighting, or Broken Tree Limb. We would often filter the data to certain categories and create maps of the number of complaints deriving from different neighborhoods about that issue. However, these categories were collectively maintained by over 70 city agencies which were constantly changing how they recorded issues. For instance, In 2015, the category HEATING (referring to a heating issue in an apartment) changed to HEAT/HOT WATER. If we did not know that the categories were changing, we may have looked at the data and thought that there was a sudden drop off in heating complaints or a sudden uptick in hot water complaints - when in fact, it was just the language in encoded in the system changing. 
+For instance, when I worked for NYC's civic data team, I would regularly work with open 311 data. Every 311 call is coded with a certain category, such as Noise, No Heat and Hot Water in Building, Rat Sighting, or Broken Tree Limb. We would often filter the data to certain categories and create maps of the number of complaints deriving from different neighborhoods about that issue. However, these categories were collectively maintained by over 70 city agencies which were constantly changing how they recorded issues. For instance, In 2015, the category HEATING (referring to a heating issue in an apartment) changed to HEAT/HOT WATER. If we did not know that the categories were changing, we may have looked at the data and thought that there was a sudden drop off in heating complaints or a sudden uptick in hot water complaints - when in fact, it was just the language in encoded in the system changing. 
 
 In what ways have semantics, along with the words used to represent certain meanings, changed over time in your dataset?
+
 ```{r eval=FALSE}
 Fill your response here.
 ```
@@ -330,21 +403,25 @@ Fill your response here.
 Last week you listed a number of questions that your quantitative calculations might help you to address. Select two of those questions, and list them below. Then consider what confounding variables you may need to consider before assuming the value you calculated or the plot you created could adequately address that question.
 
 What was one question you identified last week?
+
 ```{r eval=FALSE}
 Fill your response here.
 ```
 
 What confounding variable might you need to consider before assuming your calculation could answer that question?
+
 ```{r eval=FALSE}
 Fill your response here.
 ```
 
 What was one question you identified last week?
+
 ```{r eval=FALSE}
 Fill your response here.
 ```
 
 What confounding variable might you need to consider before assuming your calculation could answer that question?
+
 ```{r eval=FALSE}
 Fill your response here.
 ```
@@ -358,8 +435,6 @@ At this point, we will begin working in the ui code block and creating more cros
 Be sure to follow all commented instructions below to add inputs to your Shiny app. 
 
 ```{r}
-#INPUT VARIABLES
-
 geo_input_choices <- 
   #REPLACE hospitals BELOW WITH YOUR OWN DATAFRAME
   hospitals %>% 
@@ -369,7 +444,7 @@ geo_input_choices <-
   #REPLACE STATE BELOW WITH YOUR OWN GEOGRAPHIC VARIABLE
   arrange(STATE)
 
-#COMMENT LINES BELOW IF YOU DO NOT HAVE A TEMPORAL VARIABLE IN YOUR DATAFRAME
+#REMOVE LINES BELOW IF YOU DO NOT HAVE A TEMPORAL VARIABLE IN YOUR DATAFRAME
 date_input_start <- 
   #REPLACE hospitals BELOW WITH YOUR OWN DATAFRAME
   hospitals %>% 
@@ -381,8 +456,12 @@ date_input_end <-
   hospitals %>% 
   #REPLACE SOURCEDATE BELOW WITH YOUR OWN TEMPORAL VARIABLE
   summarize(date = max(SOURCEDATE))
-#COMMENT LINES ABOVE IF YOU DO NOT HAVE A TEMPORAL VARIABLE IN YOUR DATAFRAME
+#REMOVE LINES ABOVE IF YOU DO NOT HAVE A TEMPORAL VARIABLE IN YOUR DATAFRAME
+```
 
+Replace the title with your own below. Also comment out or remove the lines regarding the temporal variable if you do not have a temporal variable in your dataset.
+
+```{r}
 ui <- dashboardPage(
   
   #REPLACE 'TITLE HERE' BELOW WITH YOUR OWN TITLE
@@ -391,9 +470,9 @@ ui <- dashboardPage(
   
   dashboardSidebar(
       selectInput(inputId = "geo_val", label = "Select an geography:", choices = geo_input_choices, selected = geo_input_choices[1]),
-      #COMMENT LINE BELOW IF YOU DO NOT HAVE A TEMPORAL VARIABLE IN YOUR DATAFRAME
+      #REMOVE LINE BELOW IF YOU DO NOT HAVE A TEMPORAL VARIABLE IN YOUR DATAFRAME
       dateRangeInput(inputId = "date_val", label = "Select a date range:", start = date_input_start$date, end = date_input_end$date)
-      #COMMENT LINE ABOVE IF YOU DO NOT HAVE A TEMPORAL VARIABLE IN YOUR DATAFRAME
+      #REMOVE LINE ABOVE IF YOU DO NOT HAVE A TEMPORAL VARIABLE IN YOUR DATAFRAME
   ),
   
   dashboardBody(
@@ -408,154 +487,155 @@ ui <- dashboardPage(
 
   )
 )
-  
-
 ```
 
-In each of your functions below, you are going to add a filter statement, filtering to the user input. 
+In each of your functions below, you are going to add a filter statement, filtering to the user input. You may begin by copying and pasting your server function from lab 6 into this section. Then you are going to add the filter condition that I've listed below to each calculation and plot:
+
+      filter(
+        STATE == input$geo_val & 
+        SOURCEDATE > input$date_val[1] &
+        SOURCEDATE < input$date_val[2]
+        )
+        
+Be sure to replace STATE with your geographic variable and SOURCEDATE with your temporal variable in the above filter condition.  
 
 ```{r}
 server <- function(input, output) {
   
   output$value1 <- renderInfoBox({
     quant_insight1 <-
-    #REPLACE BELOW WITH YOUR OWN CODE
-      0
-    #REPLACE ABOVE WITH YOUR OWN CODE
+    #REPLACE hospitals BELOW WITH YOUR OWN DATAFRAME
+    hospitals %>% 
+    #REPLACE STATE WITH YOUR OWN GEOGRAPHIC VARIABLE AND SOURCEDATE WITH YOUR OWN TEMPORAL VARIABLE
+      filter(
+        STATE == input$geo_val & 
+        SOURCEDATE > input$date_val[1] &
+        SOURCEDATE < input$date_val[2]
+        ) %>%      
+    #COPY AND PASTE YOUR FUNCTION HERE FROM LAB 6
+      filter(STATUS == "OPEN" & TYPE == "GENERAL ACUTE CARE") %>%
+      summarize(median_value = median(BEDS, na.rm = TRUE))
     
     #REPLACE 'FILL DESCRIPTION HERE' BELOW WITH YOUR OWN DESCRIPTION
     infoBox(quant_insight1,'FILL DESCRIPTION HERE', icon = icon("stats", lib='glyphicon'), color = "purple")
-    #REPLACE 'FILL DESCRIPTION HERE' ABOVE WITH YOUR OWN DESCRIPTION
   })
   
   output$value2 <- renderInfoBox({
     quant_insight2 <- 
-    #REPLACE BELOW WITH YOUR OWN CODE
-      0
-    #REPLACE ABOVE WITH YOUR OWN CODE 
+    #REPLACE hospitals BELOW WITH YOUR OWN DATAFRAME
+    hospitals %>% 
+    #REPLACE STATE WITH YOUR OWN GEOGRAPHIC VARIABLE AND SOURCEDATE WITH YOUR OWN TEMPORAL VARIABLE
+      filter(
+        STATE == input$geo_val & 
+        SOURCEDATE > input$date_val[1] &
+        SOURCEDATE < input$date_val[2]
+        ) %>%
+    #COPY AND PASTE YOUR FUNCTION HERE FROM LAB 6
+      filter(STATUS == "OPEN" & TYPE == "GENERAL ACUTE CARE") %>%
+      summarize(median_value = median(BEDS, na.rm = TRUE))
     
     #REPLACE 'FILL DESCRIPTION HERE' BELOW WITH YOUR OWN DESCRIPTION
     infoBox(quant_insight2,'FILL DESCRIPTION HERE', icon = icon("stats", lib='glyphicon'), color = "purple")
-    #REPLACE 'FILL DESCRIPTION HERE' ABOVE WITH YOUR OWN DESCRIPTION
   })
   
   output$value3 <- renderInfoBox({
     quant_insight3 <- 
-    #REPLACE BELOW WITH YOUR OWN CODE
-      0
-    #REPLACE ABOVE WITH YOUR OWN CODE 
-    
-    #REPLACE 'FILL DESCRIPTION HERE' BELOW WITH YOUR OWN DESCRIPTION
-    infoBox(quant_insight3,'FILL DESCRIPTION HERE', icon = icon("stats", lib='glyphicon'), color = "purple")
-    #REPLACE 'FILL DESCRIPTION HERE' ABOVE WITH YOUR OWN DESCRIPTION
-  })
-  
-  
-  output$plot1 <- renderPlot({
-    #REPLACE BELOW WITH YOUR OWN PLOT
+    #REPLACE hospitals BELOW WITH YOUR OWN DATAFRAME
     hospitals %>% 
+    #REPLACE STATE WITH YOUR OWN GEOGRAPHIC VARIABLE AND SOURCEDATE WITH YOUR OWN TEMPORAL VARIABLE
       filter(
         STATE == input$geo_val & 
         SOURCEDATE > input$date_val[1] &
         SOURCEDATE < input$date_val[2]
         ) %>%
-      ggplot(aes(x = TYPE)) + geom_bar()
-    #REPLACE ABOVE WITH YOUR OWN PLOT 
-    
+    #COPY AND PASTE YOUR FUNCTION HERE FROM LAB 6
+      filter(STATUS == "OPEN" & TYPE == "GENERAL ACUTE CARE") %>%
+      summarize(median_value = median(BEDS, na.rm = TRUE))
+
+    #REPLACE 'FILL DESCRIPTION HERE' BELOW WITH YOUR OWN DESCRIPTION
+    infoBox(quant_insight3,'FILL DESCRIPTION HERE', icon = icon("stats", lib='glyphicon'), color = "purple")
+  })
+  
+  output$plot1 <- renderPlot({
+    #REPLACE hospitals BELOW WITH YOUR OWN DATAFRAME
+    hospitals %>% 
+    #REPLACE STATE WITH YOUR OWN GEOGRAPHIC VARIABLE AND SOURCEDATE WITH YOUR OWN TEMPORAL VARIABLE
+      filter(
+        STATE == input$geo_val & 
+        SOURCEDATE > input$date_val[1] &
+        SOURCEDATE < input$date_val[2]
+        ) %>%
+    #COPY AND PASTE YOUR PLOT HERE FROM LAB 6
+      filter(STATUS == "OPEN") %>%
+      ggplot(aes(x = TYPE)) + 
+      geom_bar() +
+      labs(title = "Number of Hospitals in the US that are Open by Type", x = "Type", y = "Count of Hospitals") + 
+      theme_bw() +
+      theme(axis.text.x = element_text(angle = 90, hjust=1)) 
   })
   
   output$plot2 <- renderPlot({
-    #REPLACE BELOW WITH YOUR OWN PLOT
+    #REPLACE hospitals BELOW WITH YOUR OWN DATAFRAME
     hospitals %>% 
+    #REPLACE STATE WITH YOUR OWN GEOGRAPHIC VARIABLE AND SOURCEDATE WITH YOUR OWN TEMPORAL VARIABLE
       filter(
         STATE == input$geo_val & 
         SOURCEDATE > input$date_val[1] &
         SOURCEDATE < input$date_val[2]
         ) %>%
-      ggplot(aes(x = TYPE)) + geom_bar()
-    #REPLACE ABOVE WITH YOUR OWN PLOT 
+    #COPY AND PASTE YOUR PLOT HERE FROM LAB 6
+      filter(STATUS == "OPEN") %>%
+      ggplot(aes(x = TYPE)) + 
+      geom_bar() +
+      labs(title = "Number of Hospitals in the US that are Open by Type", x = "Type", y = "Count of Hospitals") + 
+      theme_bw() +
+      theme(axis.text.x = element_text(angle = 90, hjust=1)) 
   })
   
   output$plot3 <- renderPlot({
-    #REPLACE BELOW WITH YOUR OWN PLOT
+    #REPLACE hospitals BELOW WITH YOUR OWN DATAFRAME
     hospitals %>% 
+    #REPLACE STATE WITH YOUR OWN GEOGRAPHIC VARIABLE AND SOURCEDATE WITH YOUR OWN TEMPORAL VARIABLE
       filter(
         STATE == input$geo_val & 
         SOURCEDATE > input$date_val[1] &
         SOURCEDATE < input$date_val[2]
         ) %>%
-      ggplot(aes(x = TYPE)) + geom_bar()
-    #REPLACE ABOVE WITH YOUR OWN PLOT  
-    
+    #COPY AND PASTE YOUR PLOT HERE FROM LAB 6
+      filter(STATUS == "OPEN") %>%
+      ggplot(aes(x = TYPE)) + 
+      geom_bar() +
+      labs(title = "Number of Hospitals in the US that are Open by Type", x = "Type", y = "Count of Hospitals") + 
+      theme_bw() +
+      theme(axis.text.x = element_text(angle = 90, hjust=1)) 
   })
   
   output$plot4 <- renderPlot({
-    #REPLACE BELOW WITH YOUR OWN PLOT
+    #REPLACE hospitals BELOW WITH YOUR OWN DATAFRAME
     hospitals %>% 
+    #REPLACE STATE WITH YOUR OWN GEOGRAPHIC VARIABLE AND SOURCEDATE WITH YOUR OWN TEMPORAL VARIABLE
       filter(
         STATE == input$geo_val & 
         SOURCEDATE > input$date_val[1] &
         SOURCEDATE < input$date_val[2]
         ) %>%
-      ggplot(aes(x = TYPE)) + geom_bar()
-    #REPLACE ABOVE WITH YOUR OWN PLOT  
+    #COPY AND PASTE YOUR PLOT HERE FROM LAB 6
+      filter(STATUS == "OPEN") %>%
+      ggplot(aes(x = TYPE)) + 
+      geom_bar() +
+      labs(title = "Number of Hospitals in the US that are Open by Type", x = "Type", y = "Count of Hospitals") + 
+      theme_bw() +
+      theme(axis.text.x = element_text(angle = 90, hjust=1)) 
   })
   
 }
 ```
-
 
 ```{r}
 shinyApp(ui, server)
 ```
 
 
-## Other Case Studies to Consider (I will continue to grow this list)
-
-### Case Study: Chrono-politics of Calls to 311 during Hurricane Sandy
-
-```{r}
-library(scales)
-nyc311 <- read.csv("https://github.com/lindsaypoirier/STS-115/blob/master/datasets/311_before_2015.csv?raw=true", stringsAsFactors = FALSE) 
-```
-
-When Hurricane Sandy hit NYC in 2012, the City leveraged data about calls New Yorkers had made to 311 to track where a number of different issues were occurring. Visualizing data about 311 calls in the three months following the disaster indeed showed a spike in complaints about issues like damaged trees and lack of heat in apartment buildings throughout the city. Leveraging this data, the city was able to position the devastation of the disaster as episodic - a result of natural forces beyond their control.
-
-```{r fig.height=5, fig.width=10}
-nyc311 %>% 
-  filter(year(Created.Date) == 2012 & month(Created.Date) %in% c(7:11)) %>%
-  ggplot(aes(x = as.Date(Created.Date), group = 1)) +
-  geom_vline(xintercept=as.Date(c("2012-10-29")),linetype=4, colour="black") +
-  geom_line(stat="count") + 
-  facet_wrap(~Complaint.Type) + 
-  labs(x="Month", y="Count") +
-  scale_x_date() +
-  theme_bw() +
-  annotate(geom = "label", x = as.Date("2012-10-29"), y = 4000, label = "Hurricane Sandy", angle = 90)
-```
-
-However, social researchers have argued that it is not so simple to delimit the temporal boundaries of a disaster. While a natural event may happen on a particular day or span of days, the structural conditions of the communities they impact have much longer timespans. Natural events occurring in delimited periods of time often exacerbate existing social issues like poverty, lack of affordable housing, and unequal access to healthcare. 
-
-Let's zoom out on the 311 data to look at these issues over the course of years versus these three months.  Complaints to 311 about damaged trees do spike following most major natural events. However, complaints about lack of heat in apartments spike every year in October ...because in New York, that's when it gets cold. By only looking at the data in months immediately after the disaster, the city could obscure the big picture - that poor New Yorkers face apartment negligence every year. The temporal context in which we analyze data matters a great deal for how we interpret it. 
-
-```{r fig.height=5, fig.width=10}
-nyc311 %>% 
-  ggplot(aes(x=as.Date(Created.Date), col=as.factor(year(Created.Date)), group = year(Created.Date))) +
-  geom_vline(xintercept=as.Date(c("2010-03-12","2010-09-16","2011-08-28","2011-10-29","2012-10-29")),linetype=4, colour="black") +
-  geom_line(stat = "count") + 
-  facet_wrap(~Complaint.Type) +
-  labs(x="Month", col="Year") +
-  scale_x_date(breaks = "3 months", labels=date_format("%b-%y")) +
-  theme_bw() +
-  annotate(geom = "label", x = as.Date("2010-03-12"), y = 4000, label = "nor'easter", angle = 90) +
-  annotate(geom = "label", x = as.Date("2010-09-16"), y = 4000, label = "tornadoes", angle = 90) +
-  annotate(geom = "label", x = as.Date("2011-08-28"), y = 4000, label = "Hurricane Irene", angle = 90) +
-  annotate(geom = "label", x = as.Date("2011-10-29"), y = 4500, label = "Halloween nor'easter", angle = 90) +
-  annotate(geom = "label", x = as.Date("2012-10-29"), y = 4000, label = "Hurricane Sandy", angle = 90)
-  #nor'easter, tornadoes, Irene, Halloween nor'easter, Sandy
-```
-
-> Liboiron, Max. 2015. “Disaster Data, Data Activism: Grassroots Responses to Representing Superstorm Sandy.” In Extreme Weather and Global Media, edited by Julia Leyda and Diane Negra. Taylor & Francis Group. https://doi.org/10.4324/9781315756486-7.
 
 
 

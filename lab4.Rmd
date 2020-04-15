@@ -31,7 +31,7 @@ I can import all of these datasets into RStudio by reading these files in as a C
 > If you want to know why we are setting stringsAsFactors to FALSE ...it's a long story, which [this blog](https://simplystatistics.org/2015/07/24/stringsasfactors-an-unauthorized-biography/) tells much better than I can. 
 
 ```{r}
-hospitals <- read.csv("https://opendata.arcgis.com/datasets/6ac5e325468c4cb9b905f1728d6fbf0f_0.csv?outSR=%7B%22latestWkid%22%3A3857%2C%22wkid%22%3A102100%7D", stringsAsFactors = FALSE)
+hospitals <- read.csv("https://opendata.arcgis.com/datasets/6ac5e325468c4cb9b905f1728d6fbf0f_0.csv", stringsAsFactors = FALSE)
 
 world_health_econ <- read.csv("https://raw.githubusercontent.com/lindsaypoirier/STS-115/master/datasets/world_health_econ.csv", stringsAsFactors = FALSE)
 
@@ -184,12 +184,14 @@ If needed, do the same to a variable in your own dataset. Otherwise, skip the co
 ### How are Null values represented in your dataset? 
 
 Null values should appear as a greyed-out and italicized *NA* (Not Available). This communicates to R that this is an empty value or, in other words, that there is not data here. However, if not properly formatted when we import the dataset, you may see Null values appear as:
+
 * "NULL" 
 * empty strings ("")
 * "NONE"
 * "NOT AVAILABLE"
 
 In the world_health_econ dataset, we can see that empty data is formatted correctly with a greyed out NA.
+
 ```{r}
 world_health_econ %>% head(10)
 ```

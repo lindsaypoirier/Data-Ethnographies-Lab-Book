@@ -29,7 +29,7 @@ library(shinydashboard)
 
 ### Import and clean example datasets 
 ```{r}
-hospitals <- read.csv("https://raw.githubusercontent.com/lindsaypoirier/STS-115/master/datasets/Hospitals.csv", stringsAsFactors = FALSE)
+hospitals <- read.csv("https://opendata.arcgis.com/datasets/6ac5e325468c4cb9b905f1728d6fbf0f_0.csv", stringsAsFactors = FALSE)
 
 world_health_econ <- read.csv("https://raw.githubusercontent.com/lindsaypoirier/STS-115/master/datasets/world_health_econ.csv", stringsAsFactors = FALSE)
 
@@ -632,16 +632,15 @@ hospitals %>%
   geom_count() +
   theme_bw() +
   theme(axis.text.x = element_text(angle = 45, hjust=1)) +
-  labs(title = "Number of Hospitals in the US that are Open by Type and Ownership", x = "Type", y = "Ownership") + # To add titles and labels
-  theme_bw() 
+  labs(title = "Number of Hospitals in the US that are Open by Type and Ownership", x = "Type", y = "Ownership")
 ```
 #### Titling a Count Plot
 
 Note how I titled my plot above: "Number of Hospitals in the US that are Open by Type and Ownership" Consider again what makes each observation unique. Here I am counting the observations by Type and Ownership, and in order to know what I'm counting, I need to know what each observation refers to. A good formula for titling count plots is as follows:
 
-Count of _____ by [x-axis variable name] and [y-axis variable name]
+Number of _____ by [x-axis variable name] and [y-axis variable name]
 
-The blank should be filled with your unit of observation. The [x-axis variable name] should be your x-label and "Count of ______" (filled the same as above) should be your y-label.
+The blank should be filled with your unit of observation. The [x-axis variable name] should be your x-label and [y-axis variable name] should be your y-label.
 
 #### What if I have qualified units of observation?
 
@@ -653,8 +652,7 @@ world_health_econ %>%
   geom_count() +
   theme_bw() +
   theme(axis.text.x = element_text(angle = 45, hjust=1)) +
-  labs(title = "Distribution of Total Health Spending per Person across Countries", x = "Continent", y = "Year") + # To add titles and labels
-  theme_bw() 
+  labs(title = "Number of Countries by Continent and Year", x = "Continent", y = "Year")
 ```
 
 ### Stacked Frequency Plots 
@@ -691,9 +689,7 @@ world_health_econ %>%
   ggplot(aes(x = life_exp, col = as.factor(year))) + 
   geom_freqpoly(binwidth = 5) +
   theme_bw() +
-  theme(axis.text.x = element_text(angle = 45, hjust=1)) +
-  labs(title = "Frequency of Life Expectancies across Countries by Year", x = "Life Expectancy", y = "Count of Countries", col = "Life Expectancy") + # To add titles and labels
-  theme_bw() 
+  labs(title = "Frequency of Life Expectancies across Countries by Year", x = "Life Expectancy", y = "Count of Countries", col = "Life Expectancy") 
 ```
 
 > Note that this is one plot that is particularly susceptible to missing data. If certain countries did not report data in certain years, the count of countries in a bracket will appear lower, not necessarily because fewer countries fell within a certain life expectancy bracket, but because fewer countries reported that life expectancy. 
@@ -708,9 +704,7 @@ world_health_econ %>%
   ggplot(aes(x = life_exp, col = continent)) + 
   geom_freqpoly(binwidth = 5) +
   theme_bw() +
-  theme(axis.text.x = element_text(angle = 45, hjust=1)) +
-  labs(title = "Frequency of Life Expectancies across Countries by Continent in 2010", x = "Life Expectancy", y = "Count of Countries", col = "Continent") + # To add titles and labels
-  theme_bw() 
+  labs(title = "Frequency of Life Expectancies across Countries by Continent in 2010", x = "Life Expectancy", y = "Count of Countries", col = "Continent")
 ```
 
 ### Point plots
@@ -726,8 +720,7 @@ hospitals %>%
   geom_point() +
   theme_bw() +
   theme(axis.text.x = element_text(angle = 45, hjust=1)) +
-  labs(title = "Number of Beds in Hopsitals by Type", x = "Type", y = "Number of Beds") + # To add titles and labels
-  theme_bw() 
+  labs(title = "Number of Beds in Hopsitals by Type", x = "Type", y = "Number of Beds")
 
 # Note that the plot above exhibits overplotting - when the data represented on a plot overlaps, making it difficult to discern one point from the next. There are various tools available to deal with over-plotting. You can reduce the size of points on the plot, increase their transparency, or set them to slightly offset each other (known as adding jitter). We do all three below.
 
@@ -737,8 +730,7 @@ hospitals %>%
   geom_jitter(size = 0.5, alpha = 0.1) + #Change geom_point to geom_jitter, reduce the size, add transparency for overplotting
   theme_bw() +
   theme(axis.text.x = element_text(angle = 45, hjust=1)) +
-  labs(title = "Number of Beds in Hopsitals by Type", x = "Type", y = "Number of Beds") + # To add titles and labels
-  theme_bw() 
+  labs(title = "Number of Beds in Hopsitals by Type", x = "Type", y = "Number of Beds")
 
 ```
 
@@ -761,8 +753,7 @@ world_health_econ %>%
   geom_point(size = 2, alpha = 0.8) +  
   theme_bw() +
   theme(axis.text.x = element_text(angle = 45, hjust=1)) +
-  labs(title = "Measure of Private Share of Health Spending in Countries by Continent in 2010", x = "Continent", y = "Measure of Private Share of Health Spending") + # To add titles and labels
-  theme_bw() 
+  labs(title = "Private Share of Health Spending in Countries by Continent in 2010", x = "Continent", y = "Private Share of Health Spending") 
 ```
 
 ### Scatterplots
@@ -777,8 +768,7 @@ hospitals %>%
   ggplot(aes(x = BEDS, y = POPULATION)) + 
   geom_point(size = 0.5) +
   theme_bw() +
-  labs(title = "Relationship between Hospital Beds and Population in the US", x = "Beds", y = "Population") + # To add titles and labels
-  theme_bw() 
+  labs(title = "Relationship between Hospital Beds and Population in the US", x = "Beds", y = "Population") 
 ```
 > Note how this plot is particularly useful for finding outliers.
 
@@ -801,7 +791,7 @@ world_health_econ %>%
   filter(year == max(year, na.rm = TRUE)) %>%
   ggplot(aes(x = tot_health_sp_pp, y = life_exp, size = pop, col = continent)) + 
   geom_point(shape = 21, stroke = 1) +
-  labs(title = "Relationship between Country Total Health Spending Per Person and Life Expectancy", x = "Total Health Spending Per Person", y = "Life Expectancy", size = "Population", col = "Continent") + # To add titles and labels
+  labs(title = "Relationship between Country Total Health Spending Per Person and Life Expectancy", x = "Total Health Spending Per Person", y = "Life Expectancy", size = "Population", col = "Continent") + 
   theme_bw() +
   scale_size_continuous(range = c(1, 10), labels = scales::comma)
 ```
@@ -880,15 +870,17 @@ Fill your response here.
 
 At this point in the quarter, we are prepared to start piecing together a dashboard for displaying the data. Shiny Apps have two components - a front end (ui), and a backend (server). On the front end, we will be coding how we want our data displayed. **For this week, the only thing you need to do on the front end is fill in your title.** On the backend, we will be coding our data analysis. 
 
-Fill in your title in the UI. 
+Fill in your title in the UI. Leave everything else the same.
 
 ```{r}
 ui <- dashboardPage(
   
+  #REPLACE 'TITLE HERE' BELOW WITH YOUR OWN TITLE
   dashboardHeader(title = "TITLE HERE"),
+  #REPLACE 'TITLE HERE' ABOVE WITH YOUR OWN TITLE
   
   dashboardSidebar(
-    #inputs will go here. 
+    #inputs will go here eventually but not now. 
   ),
   
   dashboardBody(
@@ -899,18 +891,32 @@ ui <- dashboardPage(
 ```
 
 Replace my plots in the code below with two of the plots that you created in this lab. 
+
 ```{r}
 server <- function(input, output, session) {
   
-  #REPLACE BELOW WITH YOUR OWN PLOT
   output$plot1 <- renderPlot({
-    hospitals %>% ggplot(aes(x = TYPE)) + geom_bar()
+  #REPLACE BELOW WITH YOUR OWN PLOT
+    hospitals %>% 
+      filter(STATUS == "OPEN") %>%
+      ggplot(aes(x = TYPE)) + 
+      geom_bar() +
+      labs(title = "Number of Hospitals in the US that are Open by Type", x = "Type", y = "Count of Hospitals") + 
+      theme_bw() +
+      theme(axis.text.x = element_text(angle = 90, hjust=1)) 
   #REPLACE ABOVE WITH YOUR OWN PLOT
     
   })
-  #REPLACE BELOW WITH YOUR OWN PLOT
+  
   output$plot2 <- renderPlot({
-    hospitals %>% ggplot(aes(x = TYPE)) + geom_bar()
+  #REPLACE BELOW WITH YOUR OWN PLOT
+    hospitals %>% 
+      filter(STATUS == "OPEN") %>%
+      ggplot(aes(x = TYPE)) + 
+      geom_bar() +
+      labs(title = "Number of Hospitals in the US that are Open by Type", x = "Type", y = "Count of Hospitals") + 
+      theme_bw() +
+      theme(axis.text.x = element_text(angle = 90, hjust=1)) 
   #REPLACE ABOVE WITH YOUR OWN PLOT 
   })
   

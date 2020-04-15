@@ -20,6 +20,7 @@ This week, I'd like you to primarily focus on preparing your final presentation.
 ## Getting Started
 
 ### Load the relevant libraries
+
 ```{r}
 library(tidyverse)
 library(lubridate)
@@ -29,6 +30,7 @@ library(shinyWidgets)
 ```
 
 ### Import and clean example datasets 
+
 ```{r}
 hospitals <- read.csv("https://raw.githubusercontent.com/lindsaypoirier/STS-115/master/datasets/Hospitals.csv", stringsAsFactors = FALSE)
 
@@ -56,20 +58,24 @@ hospitals$SOURCEDATE <- ymd_hms(hospitals$SOURCEDATE)
 hospitals$VAL_DATE <- ymd_hms(hospitals$VAL_DATE)
 ```
 
-### Import and clean your dataset. 
+### Import and clean your dataset
+
 ```{r}
 #Copy and paste relevant code from Lab 4 to import your data here. 
 
 #Copy and paste relevant code from Lab 4 to clean your data here. This includes any row binding, character removals, converions in variable type, date formatting, or NA conversions. 
 ```
 
-## Continue your shiny app.
+## Continue your shiny app
 
-Now we will aggregate all of the text that you produced above, along with text that you produced in lab 3 into an "About the Data" page on your Shiny App. Follow the instructions below to fill your text into a new page created on the front end of the app. 
+At this point, we are going to add text to the front interface of our Shiny app considering the issues that are not addressed in each of our calculations or plots. Follow the instructions below to fill your text into comment boxes on the front page of the app.
+
+We won't be touching the input variables this week. First copy and paste your input variables from lab 7.
 
 ```{r}
-#INPUT VARIABLES
-
+#======================
+#COPY AND PASTE THE INPUT VARIABLES SECTION FROM LAB 7 BELOW
+#======================
 geo_input_choices <- 
   #REPLACE hospitals BELOW WITH YOUR OWN DATAFRAME
   hospitals %>% 
@@ -93,8 +99,14 @@ date_input_end <-
   summarize(date = max(SOURCEDATE))
 #COMMENT LINES ABOVE IF YOU DO NOT HAVE A TEMPORAL VARIABLE IN YOUR DATAFRAME
 
-#UI
+#======================
+#COPY AND PASTE THE INPUT VARIABLES SECTION FROM LAB 7 ABOVE
+#======================
+```
 
+In the UI function below, you are going to complete the 7 statements following the commented instruction "#COMPLETE THE STATEMENT BELOW FOR..." Once you've completed these statements, copy and paste the rest of the UI function from lab 8 where I've indicated. 
+
+```{r}
 ui <- dashboardPage(
   
   #REPLACE 'TITLE HERE' BELOW WITH YOUR OWN TITLE
@@ -120,22 +132,37 @@ ui <- dashboardPage(
         infoBoxOutput("value2", width = 4),
         infoBoxOutput("value3", width = 4),
         
+        #COMPLETE THE STATEMENT BELOW FOR VALUEBOX 1 
         box(tags$p("The number above does not account for..."), width = 4),
+        
+        #COMPLETE THE STATEMENT BELOW FOR VALUEBOX 2 
         box(tags$p("The number above does not account for..."), width = 4),
+       
+        #COMPLETE THE STATEMENT BELOW FOR VALUEBOX 3 
         box(tags$p("The number above does not account for git, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam ei"), width = 4),
      
         box(plotOutput("plot1")),
         box(plotOutput("plot2")),
         
+        #COMPLETE THE STATEMENT BELOW FOR PLOT 1        
         box(tags$p("The plot above does not account for..."), width = 6),
+        
+        #COMPLETE THE STATEMENT BELOW FOR PLOT 2  
         box(tags$p("The plot above does not account for..."), width = 6),
         
         box(plotOutput("plot3")),
         box(plotOutput("plot4")),
         
+        #COMPLETE THE STATEMENT BELOW FOR PLOT 3
         box(tags$p("The plot above does not account for..."), width = 6),
+        
+        #COMPLETE THE STATEMENT BELOW FOR PLOT 4
         box(tags$p("The plot above does not account for..."), width = 6)
       ),
+      
+#======================
+#COPY AND PASTE THE REMAINDER OF THE UI FUNCTION FROM LAB 8 BELOW
+#======================
       tabItem(tabName = "about",
               tags$h1("Data Source"),
                 #REPLACE TEXT IN QUOTATIONS BELOW WITH YOUR OWN TEXT ABOUT YOUR DATA'S SOURCE
@@ -161,82 +188,150 @@ ui <- dashboardPage(
   )
 )
   
-
+#======================
+#COPY AND PASTE THE REMAINDER OF THE UI FUNCTION FROM LAB 8 ABOVE
+#======================
 ```
 
 We won't be touching the server function this week. You can copy and paste yours from Lab 7 to replace my code below. 
 
 ```{r}
+#======================
+#COPY AND PASTE THE SERVER FUNCTION FROM LAB 7 BELOW
+#======================
+
 server <- function(input, output) {
   
   output$value1 <- renderInfoBox({
-    quant_insight1 <- 0
-    #Replace '0' above with the code for one of the values you calculated above. Replace 'FILL DESCRIPTION HERE' with a brief description of this number.  
+    quant_insight1 <-
+    #REPLACE hospitals BELOW WITH YOUR OWN DATAFRAME
+    hospitals %>% 
+    #REPLACE STATE WITH YOUR OWN GEOGRAPHIC VARIABLE AND SOURCEDATE WITH YOUR OWN TEMPORAL VARIABLE
+      filter(
+        STATE == input$geo_val & 
+        SOURCEDATE > input$date_val[1] &
+        SOURCEDATE < input$date_val[2]
+        ) %>%      
+    #COPY AND PASTE YOUR FUNCTION HERE FROM LAB 6
+      filter(STATUS == "OPEN" & TYPE == "GENERAL ACUTE CARE") %>%
+      summarize(median_value = median(BEDS, na.rm = TRUE))
+    
+    #REPLACE 'FILL DESCRIPTION HERE' BELOW WITH YOUR OWN DESCRIPTION
     infoBox(quant_insight1,'FILL DESCRIPTION HERE', icon = icon("stats", lib='glyphicon'), color = "purple")
   })
   
   output$value2 <- renderInfoBox({
-    quant_insight2 <- 0
-    #Replace '0' above with the code for one of the values you calculated above. Replace 'FILL DESCRIPTION HERE' with a brief description of this number.  
+    quant_insight2 <- 
+    #REPLACE hospitals BELOW WITH YOUR OWN DATAFRAME
+    hospitals %>% 
+    #REPLACE STATE WITH YOUR OWN GEOGRAPHIC VARIABLE AND SOURCEDATE WITH YOUR OWN TEMPORAL VARIABLE
+      filter(
+        STATE == input$geo_val & 
+        SOURCEDATE > input$date_val[1] &
+        SOURCEDATE < input$date_val[2]
+        ) %>%
+    #COPY AND PASTE YOUR FUNCTION HERE FROM LAB 6
+      filter(STATUS == "OPEN" & TYPE == "GENERAL ACUTE CARE") %>%
+      summarize(median_value = median(BEDS, na.rm = TRUE))
+    
+    #REPLACE 'FILL DESCRIPTION HERE' BELOW WITH YOUR OWN DESCRIPTION
     infoBox(quant_insight2,'FILL DESCRIPTION HERE', icon = icon("stats", lib='glyphicon'), color = "purple")
   })
   
   output$value3 <- renderInfoBox({
-    quant_insight3 <- 0
-    #Replace '0' above with the code for one of the values you calculated above. Replace 'FILL DESCRIPTION HERE' with a brief description of this number.  
+    quant_insight3 <- 
+    #REPLACE hospitals BELOW WITH YOUR OWN DATAFRAME
+    hospitals %>% 
+    #REPLACE STATE WITH YOUR OWN GEOGRAPHIC VARIABLE AND SOURCEDATE WITH YOUR OWN TEMPORAL VARIABLE
+      filter(
+        STATE == input$geo_val & 
+        SOURCEDATE > input$date_val[1] &
+        SOURCEDATE < input$date_val[2]
+        ) %>%
+    #COPY AND PASTE YOUR FUNCTION HERE FROM LAB 6
+      filter(STATUS == "OPEN" & TYPE == "GENERAL ACUTE CARE") %>%
+      summarize(median_value = median(BEDS, na.rm = TRUE))
+
+    #REPLACE 'FILL DESCRIPTION HERE' BELOW WITH YOUR OWN DESCRIPTION
     infoBox(quant_insight3,'FILL DESCRIPTION HERE', icon = icon("stats", lib='glyphicon'), color = "purple")
   })
   
-  
   output$plot1 <- renderPlot({
+    #REPLACE hospitals BELOW WITH YOUR OWN DATAFRAME
     hospitals %>% 
+    #REPLACE STATE WITH YOUR OWN GEOGRAPHIC VARIABLE AND SOURCEDATE WITH YOUR OWN TEMPORAL VARIABLE
       filter(
         STATE == input$geo_val & 
         SOURCEDATE > input$date_val[1] &
         SOURCEDATE < input$date_val[2]
         ) %>%
-      ggplot(aes(x = TYPE)) + geom_bar()
-    #Replace plot above with your own plot. 
-    
+    #COPY AND PASTE YOUR PLOT HERE FROM LAB 6
+      filter(STATUS == "OPEN") %>%
+      ggplot(aes(x = TYPE)) + 
+      geom_bar() +
+      labs(title = "Number of Hospitals in the US that are Open by Type", x = "Type", y = "Count of Hospitals") + 
+      theme_bw() +
+      theme(axis.text.x = element_text(angle = 90, hjust=1)) 
   })
   
   output$plot2 <- renderPlot({
+    #REPLACE hospitals BELOW WITH YOUR OWN DATAFRAME
     hospitals %>% 
+    #REPLACE STATE WITH YOUR OWN GEOGRAPHIC VARIABLE AND SOURCEDATE WITH YOUR OWN TEMPORAL VARIABLE
       filter(
         STATE == input$geo_val & 
         SOURCEDATE > input$date_val[1] &
         SOURCEDATE < input$date_val[2]
         ) %>%
-      ggplot(aes(x = TYPE)) + geom_bar()
-    #Replace plot above with your own plot. 
+    #COPY AND PASTE YOUR PLOT HERE FROM LAB 6
+      filter(STATUS == "OPEN") %>%
+      ggplot(aes(x = TYPE)) + 
+      geom_bar() +
+      labs(title = "Number of Hospitals in the US that are Open by Type", x = "Type", y = "Count of Hospitals") + 
+      theme_bw() +
+      theme(axis.text.x = element_text(angle = 90, hjust=1)) 
   })
   
   output$plot3 <- renderPlot({
+    #REPLACE hospitals BELOW WITH YOUR OWN DATAFRAME
     hospitals %>% 
+    #REPLACE STATE WITH YOUR OWN GEOGRAPHIC VARIABLE AND SOURCEDATE WITH YOUR OWN TEMPORAL VARIABLE
       filter(
         STATE == input$geo_val & 
         SOURCEDATE > input$date_val[1] &
         SOURCEDATE < input$date_val[2]
         ) %>%
-      ggplot(aes(x = TYPE)) + geom_bar()
-    #Replace plot above with your own plot. 
-    
+    #COPY AND PASTE YOUR PLOT HERE FROM LAB 6
+      filter(STATUS == "OPEN") %>%
+      ggplot(aes(x = TYPE)) + 
+      geom_bar() +
+      labs(title = "Number of Hospitals in the US that are Open by Type", x = "Type", y = "Count of Hospitals") + 
+      theme_bw() +
+      theme(axis.text.x = element_text(angle = 90, hjust=1)) 
   })
   
   output$plot4 <- renderPlot({
+    #REPLACE hospitals BELOW WITH YOUR OWN DATAFRAME
     hospitals %>% 
+    #REPLACE STATE WITH YOUR OWN GEOGRAPHIC VARIABLE AND SOURCEDATE WITH YOUR OWN TEMPORAL VARIABLE
       filter(
         STATE == input$geo_val & 
         SOURCEDATE > input$date_val[1] &
         SOURCEDATE < input$date_val[2]
         ) %>%
-      ggplot(aes(x = TYPE)) + geom_bar()
-    #Replace plot above with your own plot. 
+    #COPY AND PASTE YOUR PLOT HERE FROM LAB 6
+      filter(STATUS == "OPEN") %>%
+      ggplot(aes(x = TYPE)) + 
+      geom_bar() +
+      labs(title = "Number of Hospitals in the US that are Open by Type", x = "Type", y = "Count of Hospitals") + 
+      theme_bw() +
+      theme(axis.text.x = element_text(angle = 90, hjust=1)) 
   })
-  
-}
+} 
+#======================
+#COPY AND PASTE THE SERVER FUNCTION FROM LAB 7 ABOVE
+#======================
 ```
-
 
 ```{r}
 shinyApp(ui, server)
