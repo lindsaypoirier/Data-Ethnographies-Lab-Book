@@ -68,6 +68,84 @@ hospitals$VAL_DATE <- ymd_hms(hospitals$VAL_DATE)
 #Copy and paste relevant code from Lab 4 to clean your data here. This includes any row binding, character removals, converions in variable type, date formatting, or NA conversions. 
 ```
 
+
+
+### Zooming out - aka grouping common values and summarizing
+
+At times, we are seeking to get a broader picture of what's going on in our dataset than provided - grouping observations that share a common value and then performing a calculation to summarize something within each of those groups. In other words, sometimes we want to see our data in aggregate. For instance, I may want to know the total number of hospital beds per state. To calculate this, I would need to group all of the hospital observations by state and then sum the total number of beds in each group. 
+In such cases, we can call **group_by()** to aggregate the observations with common variable values into groups. Then we will call **summarize()** to perform a calculation within each of those groups. **summarize()** takes a set of values and a calculation method and returns a single value. For instance, if we call summarize() with a numeric column in our dataset and "mean" as a calculation method, it will return the average of all the numeric values in that column. When called in conjunction with group_by(), **summarize()** takes a set of values for each group and a calculation method and returns a single value for each group. 
+
+For the hospitals dataset, we will group the observations by STATE and then use summarize to calculate the sum of BEDS per state. Notice below how we are choosing to ignore NA values above by calling na.rm = TRUE. When we do so, we need to keep in mind that we are not summarizing across all observations in the dataset, but only those for which there is a value listed in the variable we are operating on. Because of this, I also calculate the number of observations in each group, the number of observations where the BEDS variable is missing, and the percentage of observations in the group where the variable is missing. This provides important context for how readily we can rely on these numbers. For instance, when you run the code below, note how in Alaska, the number of beds are missing for 28% of the observations. 
+
+```{r}
+#Run this code chunk.
+
+#df %>% group_by(CATEGORICAL_VARIABLE) %>% summarize(NEW_VARIABLE_NAME = sum(NUMBERIC_VARIABLE, na.rm = TRUE)) %>% ungroup()
+
+hospitals %>% 
+  group_by(STATE) %>% #Group observations by state
+  summarize(
+    STATES_BEDS = sum(BEDS, na.rm = TRUE), #Calculate the sum of BEDS within each STATE group
+    OBSERVATIONS = n(), #Calculate how many observations are in each STATE group
+    MISSING_BEDS = sum(is.na(BEDS)), #Calculate how many NAs are in the BEDS variable in each STATE group
+    PERCENT_MISSING = sum(is.na(BEDS))/n()*100) %>% #Divide the two values you just calculated to determine the percent of missing data
+  ungroup()
+```
+
+> Notice that I close each of these calls with **ungroup()**. When we group_by() a variable, any subsequent function calls will continue to be performed on the grouped data, unless we ungroup() it. This can be important if we want to filter to specific values after we summarize() the data. Assuming that we don't want to perform a filter operation within each group but on the entire new dataframe created after summarizing, we need to ungroup() the data before performing the filter() operation. 
+
+From this function, we see the number of beds across all hospitals per state. Depending on the question we are asking, this may or may not be relevant. For instance, if I'm wondering how much hospital infrastructure is available to support Covid-19 patients, one (of a number of factors) I need to consider before presenting this data is which types of hospitals are accepting Covid-19 patients. Are rehabilitation hospitals accepting patients? Psychiatric hospitals? Military hospitals? If they aren't now, will they at some point? Further, some states are talking about cordoning off hotels for Covid-19 patients. How do we account for this change in the number of hospital beds (something definitely not represented in our data based on the way hospital has been defined). We need to do external research to answer these questions. Then we may wish to filter our data to relevant hospital types. For instance, at this moment, we may filter our data to only include beds at General Acute Care Hospitals. We also know that some hospitals in the dataset are closed. We need to also filter these out before presenting the data. Notice how below, I can do this by simply copying and pasting the code from above and adding one filter statement before grouping the data. 
+
+```{r}
+#Run this code chunk.
+
+hospitals %>% 
+  filter(TYPE == "GENERAL ACUTE CARE" & STATUS == "OPEN") %>%
+  group_by(STATE) %>% #Group observations by state
+  summarize(
+    STATES_BEDS = sum(BEDS, na.rm = TRUE), #Calculate the sum of BEDS within each STATE group
+    OBSERVATIONS = n(), #Calculate how many observations are in each STATE group
+    MISSING_BEDS = sum(is.na(BEDS)), #Calculate how many NAs are in the BEDS variable in each STATE group
+    PERCENT_MISSING = sum(is.na(BEDS))/n()*100) %>% #Divide the two values you just calculated to determine the percent of missing data
+  ungroup()
+```
+
+In other words, often times to answer questions within a dataset, we need to both zoom in and out on data - honing in on certain observations and then generalizing across them. We cannot answer questions well if we don't have a good understanding of what's included in our data and how issues are defined. Had we not known that hospitals that are closed and hospitals that are classed as rehabs or psychiatric facilities were included in the data, we may have made some poor assumptions about the number of beds available. Also note how, in every step of data analysis, we have to make decisions about what to include and what to exclude in the analysis. Data analysts play a very active role in shaping the knowledge that gets produced from data. The numbers can never speak for themselves. 
+
+Select a categorical variable that you would like to group your data by, so that you can summarize some statistics across each grouping. You may group your data by a particular year, by a particular location (such as a state or a region), or by a particular category. Then select a numeric variable in your dataset to summarize by. For instance, you may want to sum the total number of reports in a given year, or find the average number of cases reported in a certain state. Also calculate the percent of observations where data is missing in each group. If you have qualified units of observation, you may want to group the data by one of the variables in your unique key. For instance, if your unique key is a county and year, then perhaps you want to group the data by county and summarize something across each year. If you have qualified units of observation and choose to group by a variable that is not in your unique key, then be sure to filter the data as you have been above. 
+
+```{r}
+#Uncomment the appropriate lines below, and fill in your data frame, variables, and summarize variable name, and math function. Then run the code.
+#_____ %>% group_by(_____) %>% summarize(_____ = _____(_____, na.rm = TRUE), OBSERVATIONS = n(), MISSING = sum(is.na(_____)), PERCENT_MISSING = sum(is.na(BEDS))/n()*100)
+
+#If you have qualified units of observation (and not grouping by the qualifier).
+#_____ %>% filter(_____ == _____) %>% group_by(_____) %>% summarize(_____ = _____(_____, na.rm = TRUE), OBSERVATIONS = n(), MISSING = sum(is.na(_____)), PERCENT_MISSING = sum(is.na(BEDS))/n()*100)
+```
+
+What question might this analysis help to address?
+
+```{r eval=FALSE}
+Fill your response here. 
+```
+
+Are there any other variables in your dataset that you need to take into consideration before directing this analysis towards answering that question? In other words, do you need to zoom into any specific areas of the dataset (by filtering) in order to appropriately address this question? If so, which? Be sure to adjust your plot above to reflect this.
+
+```{r eval=FALSE}
+Fill your response here. 
+```
+
+What else would we need to know to fully address this question? Here you may consider what you know about how this dataset was produced and its limitations.
+
+```{r eval=FALSE}
+Fill your response here. 
+```
+
+What insight can you draw from grouping and summarizing?
+
+```{r eval=FALSE}
+Fill your response here. 
+```
+
 ## Measures of Central Tendency
 
 A measure of central tendency is a single numeric quantity describing data by identifying a central position within it. It summarizes values within a set into a single value. We often refer to such a value as an average. 

@@ -15,35 +15,30 @@ editor_options:
 
 ## Instructions and Overview
 
-In this assignment, we will practice graphically representing variation and covariation in a dataset. To begin you will need to import and clean your dataset. You may reference last week's lab to help with this. After this, you should follow the prompts and complete the short answer questions. At various points in this assignment, you will be asked to draw insights about your dataset after calling certain functions. When I ask you to draw an insight, I’m not asking you to describe what the function does or to state the results that you get. Instead I’m asking you to interpret those results and consider what this might tell us about the issues represented in the dataset or if it might signal issues of data quality. For instance, stating "the maximum value in the age column is 999," is not an insight. Instead you should say, "the maximum value in the age column is 999, which is much higher than I would expect and may signal that the data was input wrong or that the data collectors at using 999 to represent null values."
+In this assignment, we will examine what makes observations in our dataset both similar and different. To do so, we will consider how values in the dataset are distributed across observations, and how those values vary when considered in relation to other variables in the dataset. In this sense, we will practice graphically representing variation and co-variation in a dataset. To begin you will need to import and clean your dataset. You may reference last week's lab to help with this. After this, you should follow the prompts and complete the short answer questions. Following each code chunk you compose and run in this assignment, I will ask you to do four things: 1) query, 2) summarize), 3) interpret, and 4) reflect. 
+
+1. QUERY: I'm going to ask you to write a question that the code that you composed and ran is designed to answer. This is an opportunity to reflect on whether you understand what the code is actually doing. If you are struggling to come up with a question, it is most likely because you are not fully certain what the code is doing. If this is the case, you may need to study the functions a bit more. 
+2. SUMMARIZE: I'm then going to ask you to summarize one thing that you learn from your data based on the output of the code. What do the results tell you empirically? Here you will want to be specific making sure your summary considers the scope of the data - its geographic, temporal, and topical bounds. 
+3. INTERPRET: I'm going to ask you to then interpret your data, considering why the result matters in a broader sense. If you were to convey the results to a decision-maker, how would you convey to them the significance of the result? What should the numbers make us think? What questions do they bring up?
+4. REFLECT: Finally, I'm going to ask you to reflect on some of the limitations to answering the questions that you posed with the data at hand. Knowing what you know about how the data was collected and aggregated, what uncertainties remain in regards to addressing this question? In what ways is the analysis limited by the scope of the data's definitions or categories?
 
 ## Getting Started
 
 ### Load the relevant libraries
+
 ```{r}
 library(tidyverse)
 library(lubridate)
-library(shiny)
-library(shinydashboard)
 ```
 
 ### Import and clean example datasets 
+
 ```{r}
-hospitals <- read.csv("https://opendata.arcgis.com/datasets/6ac5e325468c4cb9b905f1728d6fbf0f_0.csv", stringsAsFactors = FALSE)
+hospitals <- read.csv("datasets/Hospitals.csv", stringsAsFactors = FALSE)
 
-world_health_econ <- read.csv("https://raw.githubusercontent.com/lindsaypoirier/STS-115/master/datasets/world_health_econ.csv", stringsAsFactors = FALSE)
+world_health_econ <- read.csv("datasets/world_health_econ.csv", stringsAsFactors = FALSE)
 
-cases <- read.csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv", stringsAsFactors = FALSE)
-
-#Do not worry about this line of code for now. Since the cases data gets appended every day with a new column representing that day's case counts, if we want the total cases per country, we need to add up all of the previous day's counts into a new column. The column below does this for us. 
-cases <- 
-  cases %>% 
-  mutate(Total.Cases = 
-           cases %>% 
-           select(starts_with("X")) %>% 
-           rowSums()
-         ) %>%
-  select(Province.State, Country.Region, Total.Cases)
+cases <- read.csv("https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv", stringsAsFactors = FALSE)
 
 hospitals$ZIP <- as.character(hospitals$ZIP)
 
@@ -51,235 +46,232 @@ hospitals$ZIP <- str_pad(hospitals$ZIP, 5, pad = "0")
 
 is.na(hospitals) <- hospitals == "NOT AVAILABLE"
 is.na(hospitals) <- hospitals == -999
-is.na(cases) <- cases == ""
 
 hospitals$SOURCEDATE <- ymd_hms(hospitals$SOURCEDATE)
 hospitals$VAL_DATE <- ymd_hms(hospitals$VAL_DATE)
-
+cases$date <- ymd(cases$date)
 ```
 
 ### Import and clean your dataset. 
-```{r}
-#Copy and paste relevant code from Lab 4 to import your data here. 
 
-#Copy and paste relevant code from Lab 4 to clean your data here. This includes any row binding, character removals, converions in variable type, date formatting, or NA conversions. 
+```{r}
+#Copy and paste the code from lab 4 to both import and clean your dataset here. 
 ```
 
-## Exploring Subsetted or Grouped Data
+## Zooming in to Explore Filtered Data
 
-Last week, we explored how your data was defined, how it was categorized, and how missing values were represented. Through this exercise, we were able to develop a good general overview of the observations, variables, and values in our datasets. Sometimes, however, we want to be able to zoom in to specific areas of our dataset and explore what is going on in that area. We also sometimes want to be able to zoom out - summarizing something across groups of observations in our data.  As we prepare to visualize variation and co-variation in the dataset, let's first go over how we can both zoom in and zoom out on our datasets. 
+Before we get into how to graphically represent variation and co-variation, we will first need to consider what sets of observations we will be comparing. Often in data exploration, we do not just want to examine the dataset as a whole, but to also examine how values, calculations, and plots change when we zoom in to one specific set of observations in the dataset. Last week, we explored how your data was defined, how it was categorized, and how missing values were represented. Through this exercise, we were able to develop a general overview of the observations, variables, and values in our datasets. Knowing this we likely have a better sense of areas we want to be able to zoom into and explore in our data. As we prepare to visualize variation and co-variation in the dataset, let's first go over how we can both zoom in on certain observations. 
 
-### Zooming in - Exploring Filtered Categorical Data
-
-#### Filtering to a Category
+### Filtering to a Category
 
 Filtering is one way we can zoom in on our data - exploring only those observations that meet a particular criteria.
 
-For instance, last week we learned above that one criteria for being designated as a Critical Access Hospital is that the hospital must have 25 or fewer inpatient beds. We may want to see how the values for BEDS change when we filter to (or zoom into) just those observations representing critical access hospitals. Below I will do this, select the BEDS variable, and call summary().
+For instance, last week we learned above that one criteria for being designated as a Critical Access Hospital is that the hospital must have 25 or fewer inpatient beds. We may want to see how the values for BEDS change when we filter to (or zoom into) just those observations representing critical access hospitals. Notice how we can combine any number of dplyr verbs using the pipe (%>%). Below I will filter to rows that meet a criteria and then select a variable to examine from the filtered data.
 
 ```{r}
-#df %>% filter(CATEGORICAL_VARIABLE == "VALUE") %>% select(NUMERIC_VARIABLE) %>% summary() 
+#Run this code chunk.
+
+#df %>% filter(CATEGORICAL_VARIABLE == "VALUE") %>% select(CATEGORICAL_VARIABLE)
+hospitals %>% filter(TYPE == "CRITICAL ACCESS") %>% select(NAME, BEDS)
 hospitals %>% filter(TYPE == "CRITICAL ACCESS") %>% select(BEDS) %>% summary()
 ```
-
-We can see that there are some hospitals in the US that have been designated as critical access hospitals that have more than 25 beds. Since this does not align with the criteria for critical access hospitals that we discovered in our research, it is likely something that we will want to investigate further.
-
-#### Filtering to Numeric Observations Above or Below a Threshold
-
-We may also want to see which states have hospitals with more than 1500 beds. To do so, we would filter the data to those observations where BEDS is greater than 1500, and then we would check the distinct() STATES remaining in the data.
+1. QUERY: This analysis might help us answer the question: Do all critical access hospitals in the US have 25 beds or fewer, and what is average number of beds at a critical access hospital?
+2. SUMMARIZE: We can see that there are some hospitals in the US that have been designated as critical access hospitals that have more than 25 beds, that at least one critical access hospital has as many as 286 beds, that all critical access hospitals have at least three beds, and that the average number of beds hovers around 25. 
+3. INTERPRET: Since critical access hospitals are legally supposed to have 25 beds or fewer, we may want to look into which critical access hospitals have more than 25 beds. This may indicate that these hospitals are not meeting the requirements to receive federal funding or that there is an issue with the data being recorded. 
 
 ```{r}
+#Run this code chunk.
+
+hospitals %>% filter(TYPE == "CRITICAL ACCESS" & BEDS > 25) %>% select(NAME, TYPE, STATE, BEDS, STATUS)
+```
+
+4. REFLECT: There are 180 critical access hospitals in the dataset with more than 25 beds. This brings up question of how the HIFLD team determined 1) that the hospital was a critical access hospital and 2) the number of beds.  If the hospital was part of a complex with multiple facilities and just one of those facilities was critical access, was the hospital classed as critical access? If so, how were beds then calculated? What was the source of the bed count - the hospital's website? State or other government documents? Were these sources reliable?
+
+### Filtering to Numeric Observations Above or Below a Threshold
+
+We may also want to explore if there are certain hospital ownership models that tend to have more beds. To do so, we would filter the data to those observations where BEDS is greater than a certain threshold - let's say 1200. The first time I do this below, I select() the NAME of the hospital and the OWNER. This shows every hospital with more than 1200 beds, along with its OWNER type. However, what if I only wanted to know which owner types had hospitals with more than 1000 beds? I wouldn't necessarily want to select() OWNER in this case because this would show me the owner for every observation in my filtered data. As you can see below, this means that GOVERNMENT-STATE would appear 13 times! Instead, I would want to check the distinct() OWNER in the filtered data. Check out how I do this below. 
+
+```{r}
+#Run this code chunk.
+
 #df %>% filter(NUMBERIC_VARIABLE > VALUE) %>% distinct(CATEGORICAL_VARIABLE)
-hospitals %>% filter(BEDS > 1500) %>% distinct(STATE)
+
+#Lists name and owner of hospitals with more than 1000 beds.
+hospitals %>% filter(BEDS > 1000) %>% select(NAME, OWNER) 
+
+#Lists owner for every hospital with more than 1000 beds in the dataset
+hospitals %>% filter(BEDS > 1000) %>% select(OWNER) 
+
+#Lists the owners with more than 1000 beds
+hospitals %>% filter(BEDS > 1000) %>% distinct(OWNER) 
 ```
 
-From this exercise, we can see that only two states have hospitals with more than 1500 beds available.
+1. QUERY: Which ownership models have at least one hospital with more than 1000 beds?
+2. SUMMARIZE: We can see that 3 ownership models have hospitals with more than 1000 beds, including state government hospitals, district government hospitals, and non-profit hospitals.
+3. INTERPRET: This indicates that the largest hospitals in the country tend to be district and state government hospitals and non-profit hospitals, whereas, according to this data, there are no private hospitals, federal, or local hospitals with more than 1000 beds. As the US federal government considers how to distribute federal aid to hospitals, this is one (very tiny) step towards understanding the various relationships between hospital business models and patient capacity. Consider some of the [consequences](https://www.modernhealthcare.com/finance/why-some-smaller-hospitals-treating-lots-covid-patients-arent-getting-high-impact-federal) of these decisions.
+4. REFLECT: What counts as a bed in the hospitals dataset? Do ambulatory beds count? Are beds calculated based on the number of actual cots in the hospital, or the number of spaces available for beds? Does a bed count assume that there are enough staff and resources to support that many patients in those beds?
 
-### Zooming out - aka grouping common values and summarizing
+### When I Need to Filter First: One-Dimensional vs. Multi-Dimensional Data
 
-At times, we are seeking to get a broader picture of what's going on in our dataset than provided - grouping observations that share a common value and then performing a calculation to summarize something within each of those groups. For instance, I may want to know the total number of hospital beds per state. To calculate this, I would need to group all of the hospital observations by state and then sum the total number of beds in each group. 
+For some of you, filtering your data in this way will be necessary before performing operations across numeric variables in your dataset. This is because, as we learned last week, some of you have observational units that span multiple time periods, multiple geographies, or multiple issues. Before performing an operation across a numeric variable, we need to ensure all of the values in that variable are referring to observations reported across the same timeframe or geographic scale.
 
-In such cases, we can call **group_by()** to aggregate the observations with common variable values into groups. Then we will call **summarize()** to perform a calculation within each of those groups. **summarize()** takes a set of values and a calculation method and returns a single value. For instance, if we call summarize() with a numeric column in our dataset and "mean" as a calculation method, it will return the average of all the numeric values in that column. When called in conjunction with group_by(), it takes a set of values for each group and a calculation method and returns a single value for each group. 
+In the hospitals dataset, this is less of a concern because as we learned last week, the observational unit of the dataset is one thing - a hospital. The BEDS variable is always going to refer to the number of BEDS at a hospital. This means that the hospitals dataset is *one-dimensional.*
 
-For the hospitals dataset, we will group the observations by STATE and then use summarize to calculate the sum of BEDS per state. 
-
-```{r}
-#df %>% group_by(CATEGORICAL_VARIABLE) %>% summarize(NEW_VARIABLE_NAME = sum(NUMBERIC_VARIABLE, na.rm = TRUE)) %>% ungroup()
-hospitals %>% group_by(STATE) %>% summarize(state_beds = sum(BEDS, na.rm = TRUE), missing_beds = sum(is.na(BEDS))) %>% ungroup()
-```
-
-> Notice that I close each of these calls with **ungroup()**. When we group_by() a variable, any subsequent function calls will continue to be performed on the grouped data, unless we ungroup() it. This can be important if we want to filter to specific values after we summarize() the data. Assuming that we don't want to perform a filter operation within each group but on the entire new dataframe created after summarizing, we need to ungroup() the data before performing the filter() operation. 
-
-> Note how we are choosing to ignore NA values above by calling na.rm = TRUE. When we do so, we need to keep in mind that we are not summarizing across all observations in the dataset, but only those for which there is a value listed in the variable we are operating on. This is why I also summarized the sum of NAs in the BEDS variable in each group. 
-
-From this function, we see the number of beds across all hospitals per state. Depending on the question we are asking, this may or may not be relevant. For instance, if I'm wondering how much hospital infrastructure is available to support Covid-19 patients, one (of a number of factors) I need to consider before presenting this data is which types of hospitals are accepting Covid-19 patients. Are rehabilitation hospitals accepting patients? Psychiatric hospitals? Military hospitals? If they aren't now, will they at some point? Further, some states are talking about cordoning off hotels for Covid-19 patients. How do we account for this change in the number of hospital beds (something definitely not represented in our data based on the way hospital has been defined). We need to do external research to answer these questions. Then we may wish to filter our data to relevant hospital types. For instance, at this moment, we may filter our data to only include beds at General Acute Care Hospitals. We also know that some hospitals in the dataset are closed. We need to also filter these out before presenting the data. 
+With the world_health_econ data, we learned last week that every observation refers to a country *and a year*. There are two variables that make up the unique key. This means that the world_health_econ dataset is *two-dimensional.* Let's say that we wanted to call summary() on life_exp variable to compare life expectancies across countries. Without first zooming in to to a specific year, we would be including multiple values taken at the same place at different times. Let's filter the data to only include the most recent reporting year and then call summary():
 
 ```{r}
-hospitals %>%
-  filter(TYPE == "GENERAL ACUTE CARE" & STATUS == "OPEN") %>%
-  group_by(STATE) %>% 
-  summarize(state_beds = sum(BEDS, na.rm = TRUE) , missing_beds = sum(is.na(BEDS))) %>% 
-  ungroup()
-```
+#Run this code chunk.
 
-In other words, often times to answer questions within a dataset, we need to both zoom in and out on data - honing in on certan observations and then generalizing across them. We cannot answer questions well if we don't have a good understanding of what's included in our data and how issues are defined. Had we not known that hospitals that are closed and hospitals that are classed as rehabs or psychiatric facilities were included in the data, we may have made some poor assumptions about the number of beds available.
-
-Also note how, in every step of data analysis, we have to make decisions about what to include and what to exclude in the analysis. Data analysts play a very active role in shaping the knowledge that gets produced from data. The numbers can never speak for themselves. 
-
-### When I Need to Zoom In or Out
-
-For some of you, these functions will be necessary to employ before performing operations across numeric variables in your dataset. This is because, as we learned last week, some of you have observational units that span multiple time periods, multiple geographies, or multiple issues. Before performing an operation across a numeric variable, we need to ensure all of the values in that variable are referring to observations reported across the same timeframe or geographic scale.
-
-In the hospitals dataset, this is less of a concern because as we learned last week, the observational unit of the dataset is one thing without qualifiers - a hospital. The BEDS variable is always going to refer to the number of BEDS at a hospital.
-
-With the world_health_econ data, we learned last week that every observation refers to a country *and a year*. Let's say that we wanted to call summary() on life_exp variable to compare life expenctancies across countries. Without first zooming in to to a specific year, we would be including multiple values taken at the same place at different times. Let's filter the data to only include the most recent reporting year and then call summary():
-
-```{r}
 world_health_econ %>%
-  filter(year == max(year, na.rm = TRUE)) %>% #Note that this is how we can fliter to the rows with the maximum value in a variable; in this case, this would be the most recent year. 
+  filter(year == max(year, na.rm = TRUE)) %>% #Note that this is how we can filter to the rows with the maximum value in a variable; in this case, this would be the most recent year. 
   select(life_exp) %>%
   summary()
 ```
 
-In rarer cases, we will need to group_by() and summarize() our data before statistically analyzing it. This is the case with the cases dataset. Each observation in the cases dataset refers to a combination of things - a province and a country. The issue is that not every country is reporting data at the province level. This means that sometimes the Total.Cases variable is referring to the number of cases in a country and sometimes it is referring to the number of cases in a Province. If we wanted to statistically analyze the number of cases across observations, we first need to transform the dataset so that each observation is reported at the same scale. In other words, we need to zoom out to standardize the observational unit across the dataset to the country level (since we do not always have data at the province level). To do that, we will need to group_by() Country.Region and then summarize the sum of Total.Cases.
+With the cases data, we learned last week that every observation refers to a county, state, and date. There are three variables that make up the unique key. This means that the cases dataset is *three-dimensional.* Let's say that we wanted to call summary() on cases variable to compare cases across counties. Without first zooming in to to a specific date and state, we would be including multiple values taken at the same place at different times. Let's filter the data to only include the most recent date and the state of California and then call summary():
 
 ```{r}
+#Run this code chunk.
+
 cases %>%
-  group_by(Country.Region) %>%
-  summarize(Total.Cases = sum(Total.Cases, na.rm = TRUE)) %>%
-  ungroup()
-```
-Once we've done this, we can confidently statistically analyze the Total.Cases variable because we know that the number is always referring to the number of cases in a country.
-
-Alternatively, we could also filter to one country to analyze numeric variables across provinces in that country. If I were to call summary() on the Total.Cases variable in the cases dataset, I would be gathering statistics across numbers reported at different geographic scales. Below, I filter the cases dataset to one Country - Canada - so that I'm gathering statistics across all provinces in Canada. 
-
-```{r}
-cases %>% 
-  filter(Country.Region == "Canada") %>%
-  select(Total.Cases) %>%
+  filter(date == max(date, na.rm = TRUE) & state == "California") %>% 
+  select(cases) %>%
   summary()
 ```
 
-Let's test the extent to which you will need to zoom in or zoom out to statistically analyze numeric values your data. Select a discrete numeric variable in your dataset. Now complete the statement below:
+```{r}
+cases %>%
+  filter(date == max(date, na.rm = TRUE) & state == "California")
+```
+
+
+Let's test the extent to which you will need to zoom in to statistically analyze numeric values your data. Think what variables make up the unique key in your dataset. If you have more than one variable in your unique key, make sure that each is represented in your statement below. 
 
 ```{r}
-#Uncomment the last line below and fill in the blanks for your dataset. 
-#paste(df$DISCRETE_VARIABLE[1], "refers to a number of [FILL DISCRETE VARIABLE] in a _____ in my dataset.)
+#Uncomment the line associated with your dataset and fill in the blank. Then run the code.
+
+#paste(df$NUMERIC_VARIABLE[1], "refers to a number/measure of [FILL NUMERIC VARIABLE] in a _____ in my dataset.")
 
 #Example:
 paste(hospitals$BEDS[1], "refers to a number of beds in a hospital in my dataset.")
 paste(world_health_econ$pop[1], "refers to a number of people in a country in a given year in my dataset.")
-paste(cases$Total.Cases[1], "refers to a number of cases in a country and/or province in my dataset.")
+paste(cases$cases[1], "refers to a number of cumulative cases in a county and state on a given dau in my dataset.")
 
-#paste(_____$_____[1], "refers to a number of _____ in a _____ in my dataset.)
+#paste(_____$_____[1], "refers to a number of _____ in a _____ in my dataset.")
 ```
+
 How did you fill in the last _____? 
-Is your observational unit one thing (e.g. one hospital, or one country)? If this is the case, it will likely not be as essential for you to zoom in or zoom out before operating on numeric variables. **If so, we will say that you do not have qualified units of observation.**
+
+Is your observational unit one thing (e.g. one hospital, or one country)? If this is the case, it will likely not be as essential for you to zoom in before operating on numeric variables because you are working with one-dimensional data.
 
 OR 
 
-Is your observational unit a combination of things or factors (e.g. one chemical reported at a particular facility or one census tract reporting in a particular year)? If this is the case, it will likely be essential for you to zoom in or zoom out before operating on numeric variables. **If so, we will say that you do have qualified units of observation.**
+Is your observational unit a combination of things or factors (e.g. one chemical reported at a particular facility or one census tract reporting in a particular year)? If this is the case, it will likely be essential for you to zoom in before operating on numeric variables because you will be working with multi-dimensional data. 
 
-Are your units of observation qualified? If they are, do you expect to have to zoom in or zoom out on your data to perform operations across a numeric variable? What functions do you expect to use on what variables? Note: If you are struggling with this, please reach out to me.
+If you are working with multi-dimensional data, in some places throughout this lab, you will need to filter your data to particular observations before analyzing across a variable. This is because we will be summarizing information across groups of data, and it will be important to ensure that you are summarizing information across like observations.
+
+Think about what you might filter to in order to ensure that you will be comparing like observations (hint: it will involve a variable in your unique key). Perhaps you will filter to the most recent year, so that you can compare observations across geographies in that year. Or perhaps you will filter to a particular geography, so that you can compare observations across time in that geography. Or perhaps you will filter to a particular diagnosis group, so that you can compare costs across hospitals for that diagnosis. Or perhaps you will filter to a particular year and family type so that you can compare observations across counties in that year for that family type. Characterize one way you might filter your data below. Be specific. Which variable in the dataset will you filter on and to what value(s) will you filter it to?
+
 ```{r eval=FALSE}
 Fill your response here. 
 ```
 
-### Zooming in and/or Zooming Out on Your Own Data
+### Filtering Your Own Dataset
 
-Select one of the values that you identified from calling distinct() on a categorical variable in last week's lab. Filter the dataset to the rows representing that value, select a numeric variable to explore, and then call summary(). If you have qualified units of observation, be sure to first zoom into a set of observations in your data (using filter()) or, in rarer cases, zoom out to generalize the observations (calling group_by(), summarize(), and ungroup()).
+#### Filtering to a Categorical Value in your Dataset
+
+Select one of the values that you identified from calling distinct() on a categorical variable in last week's lab. Filter the dataset to the rows representing that value, select a numeric variable to explore, and then call summary(). If you have multi-dimensional data, be sure to first zoom into a set of observations in your data (using filter()). 
+
 ```{r}
-#Uncomment the appropriate lines below, and fill in your data frame, variables, and value. 
+#Uncomment the appropriate lines below, and fill in your data frame, variables, and value. Run the code.
+
 #_____ %>% filter(_____ == "_____") %>% select(_____) %>% summary()
+
+#If you have multi-dimensional data, you may need to call:
+#_____ %>% filter(_____ == _____ & _____ == "_____") %>% select(_____) %>% summary()
+
 ```
 
-What question might this analysis help to address?
+Copy and paste the definition of the categorical variable you selected from the data dictionary below. 
 
 ```{r eval=FALSE}
 Fill your response here. 
 ```
 
-Are there any other variables in your dataset that you need to take into consideration before directing this analysis towards answering that question? In other words, do you need to zoom into any specific areas of the dataset (by filtering) in order to appropriately address this question? If so, which? Be sure to adjust your plot above to reflect this.
+1. QUERY: Below, write a research question that the code you just ran is designed to be able to answer. Make sure you phrase your question directly in relation to the results of your code. In other words, you have the answer; now come up with the question. Consider this a check on whether you understand what the code above is doing. If you are unsure how to compose this question, you probably want to study the functions above a bit more closely.
 
 ```{r eval=FALSE}
 Fill your response here. 
 ```
 
-What insight can you draw from calling summary() on your filtered dataset?
+Are there any other variables in your dataset that you need to take into consideration before directing this analysis towards answering that question? In other words, do you need to zoom into any specific areas of the dataset (by filtering) in order to appropriately address this question? If so, which? (For instance, for the hospitals dataset we needed to filter to hospitals that were OPEN in order to address questions about infrastructure). Briefly note this below. 
 
 ```{r eval=FALSE}
 Fill your response here. 
 ```
 
-Select a numeric variable in your dataset that represents the extent or scale of the issue you are studying. Pick a number that you believe serves as a good indicator that this issue is at a notable extent or scale, and filter the dataset to all the rows greater than (or less than) this number. Check the remaining distinct values in a categorical variable in the dataset. If you have qualified units of observation, be sure to first zoom into a set of observations in your data (using filter()) or, in rarer cases, zoom out to generalize the observations (calling group_by(), summarize(), and ungroup()). 
+2. SUMMARIZE: Reviewing the output of your code, summarize one thing that you learn about your topic from running this code chunk. In other words, what is one thing that the results of this analysis empirically tell us about the topic? Be specific, considering the geographic, temporal, and topical scope of your data.
+
+```{r eval=FALSE}
+Fill your response here. 
+```
+
+3. INTERPRET: Now imagine you were reporting your findings to a decision-maker on your topic. Describe to that decision-maker why they should care. In other words, *interpret* what is important about this finding. 
+
+```{r eval=FALSE}
+Fill your response here. 
+```
+
+4. REFLECT: What else would we need to know to fully address this question? Knowing what you know about how the data was collected and aggregated, what uncertainties remain in regards to addressing this question? In what ways is the analysis limited by the scope of the data's definitions or categories?
+
+```{r eval=FALSE}
+Fill your response here. 
+```
+
+#### Filtering to Numeric Values in your Dataset
+
+Select a numeric variable in your dataset that represents the extent or scale of the issue you are studying. Pick a number that you believe serves as a good indicator that this issue is at a notable extent or scale, and filter the dataset to all the rows greater than (or less than) this number. Check the remaining distinct values in a categorical variable in the dataset. If you have multi-dimensional data, be sure to first zoom into a set of observations in your data (using filter()).
 
 ```{r}
-#Uncomment the appropriate lines below, and fill in your data frame, variables, condition, and value. 
+#Uncomment the appropriate lines below, and fill in your data frame, variables, condition, and value. Run the code.
 #_____ %>% filter(_____ _____ _____) %>% distinct(_____)
+
+#If you have multi-dimensional data, you may need to call:
+#_____ %>% filter(_____ == _____ & _____ _____ _____) %>% distinct(_____)
+
 ```
 
-What question might this analysis help to address?
+Copy and paste the definition of the numeric variable you selected from the data dictionary below. 
 
 ```{r eval=FALSE}
 Fill your response here. 
 ```
 
-Are there any other variables in your dataset that you need to take into consideration before directing this analysis towards answering that question? In other words, do you need to zoom into any specific areas of the dataset (by filtering) in order to appropriately address this question? If so, which? Be sure to adjust your plot above to reflect this.
+1. QUERY: Below, write a research question that the code you just ran is designed to be able to answer. Make sure you phrase your question directly in relation to the results of your code. In other words, you have the answer; now come up with the question. Consider this a check on whether you understand what the code above is doing. If you are unsure how to compose this question, you probably want to study the functions above a bit more closely.
 
 ```{r eval=FALSE}
 Fill your response here. 
 ```
 
-What insight can you draw from calling distinct on the filtered data?
+Are there any other variables in your dataset that you need to take into consideration before directing this analysis towards answering that question? In other words, do you need to zoom into any specific areas of the dataset (by filtering) in order to appropriately address this question? If so, which? (For instance, for the hospitals dataset we needed to filter to hospitals that were OPEN in order to address questions about infrastructure). Briefly note this below. 
 
 ```{r eval=FALSE}
 Fill your response here. 
 ```
 
-Select a categorical variable that you would like to group your data by, so that you can summarize some statistics across each grouping. You may group your data by a particular year, by a particular location (such as a state or a region), or by a particular category. Then select a numeric variable in your dataset to summarize by. For instance, you may want to sum the total number of reports in a given year, or find the average number of cases reported in a certain state. 
-
-```{r}
-#Uncomment the appropriate lines below, and fill in your data frame, variables, and summarize variable name, and math function. 
-#_____ %>% group_by(_____) %>% summarize(_____ = _____(_____, na.rm = TRUE)) %>% ungroup()
-```
-
-What question might this analysis help to address?
+2. SUMMARIZE: Reviewing the output of your code, summarize one thing that you learn about your topic from running this code chunk. In other words, what is one thing that the results of this analysis empirically tell us about the topic? Be specific, considering the geographic, temporal, and topical scope of your data.
 
 ```{r eval=FALSE}
 Fill your response here. 
 ```
 
-Are there any other variables in your dataset that you need to take into consideration before directing this analysis towards answering that question? In other words, do you need to zoom into any specific areas of the dataset (by filtering) in order to appropriately address this question? If so, which? Be sure to adjust your plot above to reflect this.
+3. INTERPRET: Now imagine you were reporting your findings to a decision-maker on your topic. Describe to that decision-maker why they should care. In other words, *interpret* what is important about this finding. 
 
 ```{r eval=FALSE}
 Fill your response here. 
 ```
 
-What insight can you draw from grouping and summarizing?
-
-```{r eval=FALSE}
-Fill your response here. 
-```
-
-Combine any combination of the 4 verbs we learned in class this week or last (select, filter, group by, or summarize) to explore your dataset further. You may also use arrange, summary, or distinct. 
-
-```{r}
-#Fill your function here. 
-```
-
-What question might this analysis help to address?
-
-```{r eval=FALSE}
-Fill your response here. 
-```
-
-Are there any other variables in your dataset that you need to take into consideration before directing this analysis towards answering that question? In other words, do you need to zoom into any specific areas of the dataset (by filtering) in order to appropriately address this question? If so, which? Be sure to adjust your plot above to reflect this.
-
-```{r eval=FALSE}
-Fill your response here. 
-```
-
-What insight can you draw from running this function?
+4. REFLECT: What else would we need to know to fully address this question? Knowing what you know about how the data was collected and aggregated, what uncertainties remain in regards to addressing this question? In what ways is the analysis limited by the scope of the data's definitions or categories?
 
 ```{r eval=FALSE}
 Fill your response here. 
@@ -287,11 +279,7 @@ Fill your response here.
 
 ---
 
-## Variation
-
-Variation is the extent to which the values that constitute a particular variable vary from observation to observation. Do we have a whole bunch of one particular value in a variable, and very few of another? Or maybe, do we have a more even distribution of values across a variable?
-
-### ggplot
+## ggplot
 
 At this point in the assignment, we will begin leveraging the Tidyverse package **ggplot** to create plots for visualizing the data. To create a plot with ggplot, we will follow this basic formula:
 
@@ -328,7 +316,7 @@ df %>%
   labs(title = "FILL TITLE", x = "FILL X-AXIS LABEL", y = "FILL Y-AXIS LABEL)
 ```
 
-There are also a number of useful tools for styling your plots. For instance we can set the theme of the plot to look a bit more polished by adding "+ theme_bw()" to the plot. 
+There are also a number of useful tools for styling your plots. For instance we can set the theme of the plot to look a bit more polished by adding "+ theme_bw()" to the plot. I will do this for all plots in this lab.
 
 ```{r eval=FALSE}
 df %>% 
@@ -352,13 +340,19 @@ df %>%
   scale_x_continuous(labels = scales::comma) #Change labels from scientific to comma notation
 ```
 
-So how do we visualize variation with ggplot? Below I describe two different plots that you can leverage to visualize variation - a bar plot and a frequency plot. 
+## Variation
+
+Variation is the extent to which the values in a particular variable vary from observation to observation. Examining variation involves looking at the distribution of values in a particular column in the dataset. Specifically, we are *counting* the number of times each value or set of values appears in that variable. Do we have a whole bunch of one particular value in a certain variable, and very few of another? Or maybe, do we have a more even distribution of values across a variable?
+
+So how do we visualize variation with ggplot? Below I describe two different plots that you can leverage to visualize variation - a bar plot and a histogram. 
 
 ### Bar Plot
 
-A *bar plot* displays the number of times each value appears in a categorial variable. This will tell us how the observations in the dataset *vary* in regards to that variable. In other words, this plot will communicate the number of observations in your dataset by that variable. 
+A *bar plot* displays the number of times each value appears in a categorical variable. It *counts* the number of times each value appears in that variable and then sets the height of a bar in the plot according to that count. This will tell us how the observations in the dataset *vary* in regards to that variable. In other words, this plot will communicate the number of observations in your dataset by that variable. 
 
 ```{r fig.height=5, fig.width=10}
+#Run this code chunk.
+
 #df %>% ggplot(aes(x = CATEGORICAL_VARIABLE)) + geom_bar() + labs(title = "TITLE", x = "X-AXIS NAME", y = "Y-AXIS NAME")
 
 hospitals %>% 
@@ -372,6 +366,8 @@ hospitals %>%
 Remember that this dataset includes hospitals that are designated as closed. Depending on the question we are trying to address, we may wish to zoom in to only the observations signifying a hospital that is open before creating this plot. 
 
 ```{r fig.height=5, fig.width=10}
+#Run this code chunk.
+
 #df %>% ggplot(aes(x = CATEGORICAL_VARIABLE)) + geom_bar() + labs(title = "TITLE", x = "X-AXIS NAME", y = "Y-AXIS NAME")
 
 hospitals %>% 
@@ -393,144 +389,175 @@ In order to fill in the blank line above, consider the statement we produced las
 
 The [x-axis variable name] should be your x-label and "Count of ______" (filled the same as above) should be your y-label. Note that if you filter your dataset, you should account for this in the title: "Number of Hospitals in the US by Type"
 
-##### What if I have qualified units of observation?
+##### What if I have multi-dimensional data?
 
-If this is the case, then your y-axis is not counting a single thing like the number of hospitals, but a combination of things like the number of province/country pairs. For instance, let's say your data reports the population of each country each year as it does in the world_health_econ dataset
+When we create a bar plot, we are counting the number of observations that fall into each category. If there is only one variable that makes up your unique key, that one variable will represent what is being counted (e.g. above we are counting hospitals by category). However, if there are multiple variables in your unique key, then identifying what it is that you are counting becomes a little more complicated. For instance, let's say your data reports the population of each country each year as it does in the world_health_econ dataset. Now let's say that you wanted to plot the number of countries per continent. If you were to call:
 
-Now let's say that you wanted to plot the number of countries per continent. If you were to call:
 ```{r}
+#Run this code chunk.
+
 world_health_econ %>% 
   ggplot(aes(x = continent)) + 
   geom_bar() +
-  labs(title = "Number of Countries per Continent", x = "Continent", y = "Count of Countries") + #Adds a title to the plot
+  labs(title = "Number of Countries per Continent - Incorrect", x = "Continent", y = "Count of Countries") + #Adds a title to the plot
   theme_bw() +
   theme(axis.text.x = element_text(angle = 90, hjust=1)) #Changes x-axis tick labels 90 degrees 
 ```
 
-... you would be counting the combination of the number of countries and years per continent. Each country would be represented in the bar for every year that it was included in the dataset. In other words, the y-axis would not just represent countries but both countries and years. If we want the y-axis to only be counting one thing, then we need to first reduce the dataset to the distinct values of what you wish to count and what you wish to count by. You can do this by placing the distinct call before calling ggplot, or by filtering the data to the most recent year. 
+... you would be counting the combination of the number of countries and years per continent. There are not 800 countries in Africa, but Africa appears in the dataset 800 times because each country in Africa has several rows in the dataset - one for each reporting year. In other words, each country is represented in the bar for every year that it was included in the dataset. The y-axis does not just represent countries but both countries and years. If we want the y-axis to only be counting one thing, then we need to first reduce the dataset to values in a particular context. You can do this by filtering the data as you had been doing above.
 
 ```{r}
+#Run this code chunk.
+
 world_health_econ %>% 
-  distinct(country, continent) %>%
+  filter(year == max(year, na.rm = TRUE)) %>%
   ggplot(aes(x = continent)) + 
   geom_bar() +
-  labs(title = "Number of Countries per Continent", x = "Continent", y = "Count of Countries") + #Adds a title to the plot
+  labs(title = "Number of Countries per Continent in the most Recent Reporting Year", x = "Continent", y = "Count of Countries") + #Adds a title to the plot
   theme_bw() +
   theme(axis.text.x = element_text(angle = 90, hjust=1)) #Changes x-axis tick labels 90 degrees
 ```
 
-#### Select a categorical variable for which you want to visualize the frequency of times it appears in the dataset. 
-I recommend that you select one of the same categorical variables that you analyzed with the distinct() function last week. At this point hold off on selecting a geographic categorical variable, such as Country, State, or County. If you have qualified units of observation, be sure to reduce your dataset to the distinct values you wish to count.
+> Note the addition to my title above. If you filter your dataset, the formula for titling changes a bit to Frequency of [x-axis variable name] across _____ in [filtered value]
+
+#### Select a categorical variable for which you want to graphically represent the number of times it appears in the dataset. 
+
+I recommend that you select one of the same categorical variables that you analyzed with the distinct() function last week. If you have multi-dimensional data, be sure to filter your data first so that all of the observations you are counting have one variable as a unique key. If you notice styling issues with your data, be sure to consider my notes about how to fix them above.
 
 ```{r fig.height=5, fig.width=10}
-#Uncomment the line below and fill appropriately. Add a title and labels to your plots, and adjust its style to be legible.
+#Uncomment the line below and fill appropriately. Add a title and labels to your plots, and adjust its style to be legible. Then run the code.
 #_____ %>% ggplot(aes(x = _____)) + geom_bar()
 
-#If qualified:
-#_____ %>% distinct(_____) %>% ggplot(aes(x = _____)) + geom_bar()
+#If multi-dimensional:
+#_____ %>% filter(_____ == _____) %>% ggplot(aes(x = _____)) + geom_bar()
 ```
 
-Reflect on the distribution of categories in the dataset. Is there an even distribution of observations across each category, or are certain categories more represented than others? Why might this be? What does this say about the social, political, or economic landscape of your topic? 
+Copy and paste the definition of the categorical variable you selected from the data dictionary below. 
+
+```{r eval=FALSE}
+Fill your response here. 
+```
+
+Complete the following statement:
+
+```{r eval=FALSE}
+Each bar in the bar plot above is counting the number of _____ in my dataset according to _____.
+```
+
+1. QUERY: Below, write a research question that the code you just ran is designed to be able to answer. Make sure you phrase your question directly in relation to the results of your code. In other words, you have the answer; now come up with the question. Consider this a check on whether you understand what the code above is doing. If you are unsure how to compose this question, you probably want to study the functions above a bit more closely.
+
+```{r eval=FALSE}
+Fill your response here. 
+```
+
+Are there any other variables in your dataset that you need to take into consideration before directing this analysis towards answering that question? In other words, do you need to zoom into any specific areas of the dataset (by filtering) in order to appropriately address this question? If so, which? (For instance, for the hospitals dataset we needed to filter to hospitals that were OPEN in order to address questions about infrastructure). Briefly note this below. 
+
+```{r eval=FALSE}
+Fill your response here. 
+```
+
+2. SUMMARIZE: Reviewing the output of your code, summarize one thing that you learn about your topic from running this code chunk. In other words, what is one thing that the results of this analysis empirically tell us about the topic? Be specific, considering the geographic, temporal, and topical scope of your data.
+
+```{r eval=FALSE}
+Fill your response here. 
+```
+
+3. INTERPRET: Now imagine you were reporting your findings to a decision-maker on your topic. Describe to that decision-maker why they should care. In other words, *interpret* what is important about this finding. 
+
+```{r eval=FALSE}
+Fill your response here. 
+```
+
+4a. REFLECT: Reflect on the distribution of categories in the dataset. Is there an even distribution of observations across each category, or are certain categories more represented than others? Why might this be? What does this say about the social, political, or economic landscape of your topic? 
 
 ```{r eval=FALSE}
 Fill response here. 
 ```
 
-Reflect on what you learned about the history of the categories you plotted above in last week's lab. How have the social, political, and economic forces shaping this categorization impacted how we count observations related to this topic? How might this plot look different if this variable had been categorized in a different way?
+4b. REFLECT: Reflect on what you learned about the history of the categories you plotted above in last week's lab. How have the social, political, and economic forces shaping this categorization impacted how we count observations related to this topic? How might this plot look different if this variable had been categorized in a different way?
 
 ```{r eval=FALSE}
 Fill response here. 
 ```
 
-### Frequency Plot
+4c. REFLECT: Reflect on what we cannot see with this data. What might be one topic or issue that does not fit neatly into the designated categories?
 
-A *frequency plot* will display the distribution of values in a numeric variable within a designated set of increments. This will tell us how the observations in the dataset *vary* in regards to that variable. In other words, this plot will communicate the number of observations in your dataset broken down into increments of the values in that variable. 
+```{r eval=FALSE}
+Fill response here. 
+```
+
+### Histogram
+
+A *histogram* will display the distribution of values in a numeric variable within a designated set of increments. After you designate a certain number to group increments by, it will *count* the number of values in the variable that fall into each increment. Let's say you designate the number 10 to group increments by, starting at 0. The plot will count how many values in the variable fall in the increment 0-9, 10-19, 20-29, and so on. This will tell us how the observations in the dataset *vary* in regards to that variable. 
+
+Consider the plot below. This plot tells us the distribution of beds across open hospitals. It *counts* how many hospitals there are in each increment of 10 beds.
 
 ```{r fig.height=5, fig.width=10}
-#df %>% ggplot(aes(x = NUMERIC_VARIABLE)) + geom_freqpoly(binwidth = 1) + labs(title = "TITLE", x = "X-AXIS NAME", y = "Y-AXIS NAME")
+#Run this code chunk.
+
+#df %>% ggplot(aes(x = NUMERIC_VARIABLE)) + geom_histogram(binwidth = 1, boundary = 0) + labs(title = "TITLE", x = "X-AXIS NAME", y = "Y-AXIS NAME")
 
 hospitals %>% 
   filter(STATUS == "OPEN") %>%
   ggplot(aes(x = BEDS)) +
-  geom_freqpoly(binwidth = 10) +
+  geom_histogram(binwidth = 10, boundary = 0) +
   labs(title = "Distribution of Beds across Hospitals in the US that are Open", x = "Beds", y = "Count of Hospitals") +
   theme_bw()
 ```
 
-Note that binwidth refers to the size of the increments at which frequency will be calculated. Above the binwidth is set to 10. This means that ggplot will display the frequency of each value at intervals of 10, 20, 30, 40, etc. When we set the bindwidth to 1, ggplot will display the frequency of each value at intervals of 1, 2, 3, 4. etc. What difference does this make? 
+Note that boundary refers to where we want our increments to begin and binwidth refers to the size of the increments at which frequency will be calculated. Above the binwidth is set to 10. This means that ggplot will display the frequency of each value at intervals of 10, 20, 30, 40, etc. When we set the binwidth to 1, ggplot will display the frequency of each value at intervals of 1, 2, 3, 4. etc. What difference does this make? 
 
-Notice what happens when we set the binwidth to 1. While above we count the number of hospitals with 0-10 beds  10-20 beds, 20-30 beds, etc, this will count the number of hospitals with 0-1 beds, 1-2 beds, 2-3 beds, and so on. Because we are counting the number in such small increments, the plot will look much more jagged and will take a longer time to load. This plot displays the counts in *finer* granularity than the first plot.
+Notice what happens when we set the binwidth to 1. While above we count the number of hospitals with 0-9 beds  10-19 beds, 20-29 beds, etc, this will count the number of hospitals with 0 beds, 1 bed, 2 beds, and so on. Because we are counting the number in such small increments, the plot will look much more jagged and will take a longer time to load. This plot displays the counts in *finer* granularity than the first plot.
 
 ```{r fig.height=5, fig.width=10}
+#Run this code chunk.
+
 hospitals %>% 
   filter(STATUS == "OPEN") %>%
   ggplot(aes(x = BEDS)) +
-  geom_freqpoly(binwidth = 1) +
+  geom_histogram(binwidth = 1, boundary = 0) +
   labs(title = "Distribution of Beds across Hospitals in the US that are Open", x = "Beds", y = "Count of Hospitals") +
   theme_bw()
 ```
 
-When we set the binwidth to 100, we count the number of hospitals with 0-100 beds, 100-200 beds, 200-300 beds, and so on. Because we are counting the number in larger increments, the plot will look much smoother and will take less time to load. This plot displays the counts in *thicker* granularity than the first plot.
+When we set the binwidth to 100, we count the number of hospitals with 0-99 beds, 100-199 beds, 200-299 beds, and so on. Because we are counting the number in larger increments, the plot will look much smoother and will take less time to load. This plot displays the counts in *thicker* granularity than the first plot.
 
 ```{r fig.height=5, fig.width=10}
+#Run this code chunk.
+
 hospitals %>% 
   filter(STATUS == "OPEN") %>%
   ggplot(aes(x = BEDS)) +
-  geom_freqpoly(binwidth = 100) +
+  geom_histogram(binwidth = 100, boundary = 0) +
   labs(title = "Distribution of Beds across Hospitals in the US that are Open", x = "Beds", y = "Count of Hospitals") +
   theme_bw()
 ```
 
-#### Titling a Frequency Plot
+#### Titling a Histogram
 
-Note how I titled my plot above: "Distribution of Beds across Hospitals in the US that are Open" Consider again what makes each observation unique. A good formula for titling frequency plots is as follows:
+Note how I titled my plot above: "Distribution of Beds across Hospitals in the US that are Open" Consider again what makes each observation unique. A good formula for titling histograms is as follows:
 
-Frequency of [x-axis variable name] across _____ 
+Distribution of [x-axis variable name] across _____ 
 
 Again, we can fill in the blank with our observational unit. The [x-axis variable name] should be your x-label and "Count of ______" (filled the same as above) should be your y-label.
 
-#### What if I have qualified units of observation?
+#### What if I have multi-dimensional data?
 
-Let's talk about what would happen if I were to make a frequency plot of the Total.Cases in the cases dataset:
-
-```{r fig.height=5, fig.width=10}
-cases %>% 
-  ggplot(aes(x = Total.Cases)) + 
-  geom_freqpoly(binwidth = 10000) +
-  labs(title = "Distribution of Cases across ____", x = "Total Cases", y = "Count of _____") + # To add titles and labels
-  theme_bw() +
-  theme(axis.text.x = element_text(angle = 90, hjust=1)) + #Turn labels 90 degrees
-  scale_x_continuous(labels = scales::comma) #Change labels from scientific to comma notation
-```
-
-We know that each observation in the cases dataset refers to a province/country pair. So here I'm counting the number of province/countries in each bracket of total cases. Since only some countries in this dataset are broken into provinces, we are comparing counts of cases across different geographic scales - sometimes at the province level and sometimes at the country level. In this case, it makes more sense to total up the number of cases per country and then plot the distribution of cases across countries. We can use group_by() and summarize() to do this:
+In the world_health_econ data, without separating out units of observation, we would be visualizing multiple values reported at the same place at different periods in time (i.e. every year since 1995). Instead, we want to zoom into a single year in the dataset so we are just comparing values across place. 
 
 ```{r fig.height=5, fig.width=10}
-cases %>% 
-  group_by(Country.Region) %>%
-  summarize(Total.Cases = sum(Total.Cases, na.rm = TRUE)) %>%
-  ungroup() %>%
-  ggplot(aes(x = Total.Cases)) + 
-  geom_freqpoly(binwidth = 10000) +
-  labs(title = "Distribution of Cases across Countries", x = "Total Cases", y = "Count of Countries") + # To add titles and labels
-  theme_bw() +
-  theme(axis.text.x = element_text(angle = 90, hjust=1)) + #Turn labels 90 degrees
-  scale_x_continuous(labels = scales::comma) #Change labels from scientific to comma notation
-```
+#Run this code chunk.
 
-What about the world_health_econ data? Without separating out these units of observation, we would be visualizing multiple values reported at the same place at different periods in time (i.e. every year since 1995). Instead, we want to zoom into a single year in the dataset so we are just comparing values across place. 
-
-```{r fig.height=5, fig.width=10}
 world_health_econ %>% 
-  filter(year == max(year, na.rm = TRUE)) %>%
+  filter(year == max(year, na.rm = TRUE) & tot_health_sp_pp >100) %>%
   ggplot(aes(x = tot_health_sp_pp)) + 
-  geom_freqpoly(binwidth = 100) +
+  geom_histogram(binwidth = 1000, boundary = 0) +
   labs(title = "Distribution of Total Health Spending per Person across Countries in 2010", x = "Total Health Spending per Person", y = "Count of Countries") + # To add titles and labels
   theme_bw() +
-  theme(axis.text.x = element_text(angle = 90, hjust=1)) + #Turn labels 90 degrees
   scale_x_continuous(labels = scales::comma) #Change labels from scientific to comma notation
 ```
-> Note the addition to my title above. If you filter your dataset, the formula for titling changes a bit to Frequency of [x-axis variable name] across _____ in [filtered value]
+
+> Note the addition to my title above. If you filter your dataset, the formula for titling changes a bit to Distribution of [x-axis variable name] across _____ in [filtered value]
 
 #### Select a numeric variable for which you want to visualize the distribution of a set of values. 
 
@@ -542,77 +569,70 @@ _________________ | _________________ | _________________ | _________________
 2345678 | Facility B | Tarrytown | 90000
 3456789 | Facility C | Another Town | 70000
 
-In this table, we would not want to create a frequency plot with population of facility town. This is because our observational unit is a violation, not a town, and population does not describe something about the violation but instead describes something about the town the facility is in. If we were to create a frequency plot with this variable, we would be counting the number of times each population value appears in the dataset - something that does not make much sense, since we can have the same town's population town appear several times in the dataset if there are more than one violations or more than one facilities in a town. 
+In this table, we would not want to create a histogram with population of facility town. This is because our observational unit is a violation, not a town, and population does not describe something about the violation but instead describes something about the town the facility is in. If we were to create a histogram with this variable, we would be counting the number of times each population value appears in the dataset - something that does not make much sense, since we can have the same town's population appear several times in the dataset if there are more than one violations or more than one facilities in a town. 
 
-If you have qualified units of observation, be sure to first zoom into a set of observations in your data (using filter()) or zoom out to generalize the observations (calling group_by(), summarize(), and ungroup()). 
+If you have multi-dimensional data, be sure to first zoom into a set of observations in your data (using filter()).
 
 ```{r fig.height=5, fig.width=10}
-#Uncomment the line below and fill appropriately. Add a title and labels to your plots.
-#_____ %>% ggplot(aes(x = _____)) + geom_freqpoly(binwidth = _____) 
+#Uncomment the line below and fill appropriately. Add a title and labels to your plots. Run the code.
+
+#_____ %>% ggplot(aes(x = _____)) + geom_histogram(binwidth = _____, boundary = 0) 
+
 ```
 
-This gives us information about the distribution of values in the dataset. Reflect on the distribution of values. What are the range of values represented in the data? Are the values evenly distributed, or are certain values more represented than others? Why might this be? Do any of the values surprise you? Why? 
+Copy and paste the definition of the numeric variable you selected from the data dictionary below. 
+
+```{r eval=FALSE}
+Fill your response here. 
+```
+
+Complete the following statement:
+
+```{r eval=FALSE}
+Each bar in the histogram above is counting the number of _____ in my dataset according to _____.
+```
+
+1. QUERY: Below, write a research question that the code you just ran is designed to be able to answer. Make sure you phrase your question directly in relation to the results of your code. In other words, you have the answer; now come up with the question. Consider this a check on whether you understand what the code above is doing. If you are unsure how to compose this question, you probably want to study the functions above a bit more closely.
+
+```{r eval=FALSE}
+Fill your response here. 
+```
+
+Are there any other variables in your dataset that you need to take into consideration before directing this analysis towards answering that question? In other words, do you need to zoom into any specific areas of the dataset (by filtering) in order to appropriately address this question? If so, which? (For instance, for the hospitals dataset we needed to filter to hospitals that were OPEN in order to address questions about infrastructure). Briefly note this below. 
+
+```{r eval=FALSE}
+Fill your response here. 
+```
+
+2. SUMMARIZE: Reviewing the output of your code, summarize one thing that you learn about your topic from running this code chunk. In other words, what is one thing that the results of this analysis empirically tell us about the topic? Be specific, considering the geographic, temporal, and topical scope of your data.
+
+```{r eval=FALSE}
+Fill your response here. 
+```
+
+3. INTERPRET: Now imagine you were reporting your findings to a decision-maker on your topic. Describe to that decision-maker why they should care. In other words, *interpret* what is important about this finding. 
+
+```{r eval=FALSE}
+Fill your response here. 
+```
+
+4a. REFLECT: Reflect on the distribution of values. What are the range of values represented in the data? Are the values evenly distributed, or are certain values more represented than others? Why might this be? Do any of the values surprise you? Why? 
+
 
 ```{r eval=FALSE}
 Fill response here. 
 ```
 
-Why did you select the binwidth that you did? How might the story your plot tells change if you were to change the binwidth? What anomalies might be hidden with a larger binwidth, and what trends might be hidden with a smaller binwidth?
+4b. REFLECT: Why did you select the binwidth that you did? How might the story your plot tells change if you were to change the binwidth? What anomalies might be hidden with a larger binwidth, and what trends might be hidden with a smaller binwidth?
 
 ```{r eval=FALSE}
 Fill response here. 
 ```
 
-Check how the numeric variable was defined in the data dictionary, and quote the defintion below. How might the counts represented in your frequency plot appear differently if this variable was defined differently?
+4c. REFLECT: Check how the numeric variable was defined in the data dictionary, and quote the definition below. How might the counts represented in your frequency plot appear differently if this variable was defined differently?
 
 ```{r eval=FALSE}
 Fill response here. 
-```
-
-### Produce two more plots that display variation. Continue to hold off on selecting a geographic categorical variable. 
-
-```{r fig.height=5, fig.width=10}
-#Fill the code for plot 1 here. Add a title and labels to your plots.
-```
-
-What question might this analysis help to address?
-
-```{r eval=FALSE}
-Fill your response here. 
-```
-
-Are there any other variables in your dataset that you need to take into consideration before directing this analysis towards answering that question? In other words, do you need to zoom into any specific areas of the dataset (by filtering) in order to appropriately address this question? If so, which? Be sure to adjust your plot above to reflect this.
-
-```{r eval=FALSE}
-Fill your response here. 
-```
-
-What insight can you draw from this plot?
-
-```{r eval=FALSE}
-Fill your response here. 
-```
-
-```{r fig.height=5, fig.width=10}
-#Fill the code for plot 2 here. Add a title and labels to your plots.
-```
-
-What question might this analysis help to address?
-
-```{r eval=FALSE}
-Fill your response here. 
-```
-
-Are there any other variables in your dataset that you need to take into consideration before directing this analysis towards answering that question? In other words, do you need to zoom into any specific areas of the dataset (by filtering) in order to appropriately address this question? If so, which? Be sure to adjust your plot above to reflect this.
-
-```{r eval=FALSE}
-Fill your response here. 
-```
-
-What insight can you draw from this plot?
-
-```{r eval=FALSE}
-Fill your response here. 
 ```
 
 ## Co-variation
@@ -621,9 +641,11 @@ Co-variation is the extent to which the values that constitute two or more varia
 
 ### Count Plots
 
-*Count plots* display how many times two categorical values appear together in a dataset. 
+*Count plots* display how many times two categorical values appear together in a dataset. For instance, in the count plot below, we display the number of open hospitals with each combination of OWNER and TYPE.
 
 ```{r fig.height=5, fig.width=10}
+#Run this code chunk.
+
 #df %>% ggplot(aes(x = CATEGORICAL_VARIABLE, y = CATEGORICAL_VARIABLE)) + geom_count()
 
 hospitals %>% 
@@ -632,21 +654,24 @@ hospitals %>%
   geom_count() +
   theme_bw() +
   theme(axis.text.x = element_text(angle = 45, hjust=1)) +
-  labs(title = "Number of Hospitals in the US that are Open by Type and Ownership", x = "Type", y = "Ownership")
+  labs(title = "Number of Hospitals in the US that are Open by Type and Ownership", x = "Type", y = "Ownership", size = "Number of Hospitals")
 ```
+
 #### Titling a Count Plot
 
 Note how I titled my plot above: "Number of Hospitals in the US that are Open by Type and Ownership" Consider again what makes each observation unique. Here I am counting the observations by Type and Ownership, and in order to know what I'm counting, I need to know what each observation refers to. A good formula for titling count plots is as follows:
 
 Number of _____ by [x-axis variable name] and [y-axis variable name]
 
-The blank should be filled with your unit of observation. The [x-axis variable name] should be your x-label and [y-axis variable name] should be your y-label.
+The blank should be filled with your unit of observation. The [x-axis variable name] should be your x-label and [y-axis variable name] should be your y-label. You should also set the size attribute label to "Number of [observational unit]"
 
-#### What if I have qualified units of observation?
+#### What if I have multi-dimensional data?
 
-If this is the case I would encourage you to include one of the qualified variables in the x or y-axis. For instance if world_health_econ is qualified by country and year, I can include year as the y-axis below to visualize how counts of observations change over time. (Notice how they don't in the plot below. )
+If this is the case I would encourage you to include one of the variables in your unique key in the x or y-axis. For instance, if the unique key for world_health_econ is country and year, I can include year as the y-axis below to visualize how counts of observations change over time. (Notice how they don't in the plot below.) Alternatively, if you wish to compare two categorical variables that are not a part of the unique key, be sure to filter the data so that only one variable constitutes the unique key.
 
 ```{r fig.height=5, fig.width=10}
+#Run this code chunk.
+
 world_health_econ %>% 
   ggplot(aes(x = continent, y = as.factor(year))) + 
   geom_count() +
@@ -657,61 +682,99 @@ world_health_econ %>%
 
 ### Stacked Frequency Plots 
 
-*Stacked frequency plots* display the distribution of numeric values in a variable, grouped by a categorical value.
+Similar to histograms, frequency plots display the distribution of numeric values in a variable. In other words, they *count* the number observations in a dataset that fall into each bracketed increment of a numeric variable. Unlike histograms, they display these values as lines rather than as bars. We tend to use frequency plots instead of histograms when we are looking to compare frequencies across different values in a categorical variable. *Stacked frequency plots* display the distribution of numeric values in a variable, grouped by a categorical value. For instance, the plot below display the distribution of beds across open hospitals, categorized by the hospital type.
 
 ```{r fig.height=5, fig.width=10}
+#Run this code chunk.
+
 #df %>% ggplot(aes(x = NUMERIC_VARIABLE, col = CATEGORICAL_VARIABLE)) + geom_freqpoly(binwidth = 1)
 
 hospitals %>% 
   filter(STATUS == "OPEN") %>%
   ggplot(aes(x = BEDS, col = TYPE)) + 
-  geom_freqpoly(binwidth = 100) +
+  geom_freqpoly(binwidth = 100, boundary = 0) +
   labs(title = "Frequency of Beds across Hospitals in the US that are Open by Hospital Type", x = "Beds", y = "Count of Hospital", col = "Type") + # To add titles and labels
+  theme_bw() 
+```
+
+Stacked frequency plots work best when categorizing by a variable with 10 or fewer distinct values. Otherwise, it can be tricky to see the differences in color gradations. If all of your categorical variables have more than 10 distinct values, one thing you might consider is first filtering your data to a few representative categories. For instance, let's say that I would like to see the distribution of beds in hospitals across states. Since there are 57 states, if I were to categorize the distribution by state, the plot would be very difficult to read.
+
+```{r fig.height=5, fig.width=10}
+#Run this code chunk.
+
+#df %>% ggplot(aes(x = NUMERIC_VARIABLE, col = CATEGORICAL_VARIABLE)) + geom_freqpoly(binwidth = 1)
+
+hospitals %>% 
+  filter(STATUS == "OPEN") %>%
+  ggplot(aes(x = BEDS, col = STATE)) + 
+  geom_freqpoly(binwidth = 100, boundary = 0) +
+  labs(title = "Frequency of Beds across Hospitals in the US that are Open by Hospital State", x = "Beds", y = "Count of Hospital", col = "Type") + # To add titles and labels
+  theme_bw() 
+```
+
+In this case, we may wish to first filter our data to a few representative states using **%in%**.
+
+```{r fig.height=5, fig.width=10}
+#Run this code chunk.
+
+#df %>% ggplot(aes(x = NUMERIC_VARIABLE, col = CATEGORICAL_VARIABLE)) + geom_freqpoly(binwidth = 1)
+
+hospitals %>% 
+  filter(STATUS == "OPEN" & STATE %in% (c("CA", "MA", "NY", "FL", "LA"))) %>%
+  ggplot(aes(x = BEDS, col = STATE)) + 
+  geom_freqpoly(binwidth = 100, boundary = 0) +
+  labs(title = "Frequency of Beds across Hospitals in the US that are Open by Hospital State", x = "Beds", y = "Count of Hospital", col = "Type") + # To add titles and labels
   theme_bw() 
 ```
 
 #### Titling a Stacked Frequency Plot
 
-Note how I titled my plot above: "Frequency of Beds across Hospitals in the US that are Open by Hospital Type" Consider again what makes each observation unique. Here I am counting the observations by number of Beds and Hospital Type. A good formula for titling stacked frequency plots is as follows: 
+Note how I titled my plot above: "Distribution of Beds across Hospitals in the US that are Open by Hospital Type" Consider again what makes each observation unique. Here I am counting the observations by number of Beds and Hospital Type. A good formula for titling stacked frequency plots is as follows: 
 
-Frequency of [x-axis variable name] across _____ by [col variable name]
+Distribution of [x-axis variable name] across _____ by [col variable name]
 
 The blank should be filled with your unit of observation. The [x-axis variable name] should be your x-label, "Count of ______" (filled the same as above) should be your y-label, and the [col variable name] should be your col-label.
 
-#### What if I have qualified units of observation?
+#### What if I have multi-dimensional data?
 
-If this is the case I would encourage you to include one of the qualified variables in the col variable. For instance, if world_health_econ is qualified by country and year, I can include year as the col variable below to visualize how the frequency of countries with various life expectancies changes over time. 
+If this is the case I would encourage you to include one of the variables in your unique key in the col variable. For instance, if world_health_econ is unique by country and year, I can include year as the col variable below to visualize how the frequency of countries with various life expectancies changes over time. 
 
 ```{r fig.height=5, fig.width=10}
+#Run this code chunk.
+
 #df %>% ggplot(aes(x = NUMERIC_VARIABLE, col = CATEGORICAL_VARIABLE)) + geom_freqpoly(binwidth = 1)
 
 world_health_econ %>% 
   ggplot(aes(x = life_exp, col = as.factor(year))) + 
-  geom_freqpoly(binwidth = 5) +
+  geom_freqpoly(binwidth = 5, boundary = 0) +
   theme_bw() +
   labs(title = "Frequency of Life Expectancies across Countries by Year", x = "Life Expectancy", y = "Count of Countries", col = "Life Expectancy") 
 ```
 
 > Note that this is one plot that is particularly susceptible to missing data. If certain countries did not report data in certain years, the count of countries in a bracket will appear lower, not necessarily because fewer countries fell within a certain life expectancy bracket, but because fewer countries reported that life expectancy. 
 
-Alternatively, you could zoom in to one value in one of your qualified variables, filtering to a specific subset of observations and then divide by a different categorical variable. 
+Alternatively, you could zoom in to one value in one of the variables in you unique key, filtering to a specific subset of observations and then divide by a different categorical variable. 
 
 ```{r fig.height=5, fig.width=10}
+#Run this code chunk.
+
 #df %>% ggplot(aes(x = NUMERIC_VARIABLE, col = CATEGORICAL_VARIABLE)) + geom_freqpoly(binwidth = 1)
 
 world_health_econ %>% 
   filter(year == max(year, na.rm = TRUE)) %>%
   ggplot(aes(x = life_exp, col = continent)) + 
-  geom_freqpoly(binwidth = 5) +
+  geom_freqpoly(binwidth = 5, boundary = 0) +
   theme_bw() +
   labs(title = "Frequency of Life Expectancies across Countries by Continent in 2010", x = "Life Expectancy", y = "Count of Countries", col = "Continent")
 ```
 
 ### Point plots
 
-*Point plots* display the relationship between a categorical variable and a numeric variable.
+*Point plots* display the relationship between a categorical variable and a numeric variable. For instance, the plot below displays a relationship between hospital type and the number of beds at the hospital. Notably, unlike the plots we have been viewing until now, with point plots, we see a point for every observation in the dataset. Because point plots display every observation (rather than aggregating them into other polygons and lines), they are particularly good for seeing outliers in the data. However, with large datasets, this also can mean that points will overlap. Note that the first plot below exhibits overplotting - when the data represented on a plot overlaps, making it difficult to discern one point from the next. There are various tools available to deal with over-plotting. You can reduce the size of points on the plot, increase their transparency, or set them to slightly offset each other (known as adding jitter). We do all three in the second plot below.
 
 ```{r fig.height=5, fig.width=10}
+#Run this code chunk.
+
 #df %>% ggplot(aes(x = CATEGORICAL_VARIABLE, y = NUMERIC_VARIABLE)) + geom_point()
 
 hospitals %>% 
@@ -720,9 +783,8 @@ hospitals %>%
   geom_point() +
   theme_bw() +
   theme(axis.text.x = element_text(angle = 45, hjust=1)) +
-  labs(title = "Number of Beds in Hopsitals by Type", x = "Type", y = "Number of Beds")
+  labs(title = "Number of Beds in Hospitals by Type", x = "Type", y = "Number of Beds")
 
-# Note that the plot above exhibits overplotting - when the data represented on a plot overlaps, making it difficult to discern one point from the next. There are various tools available to deal with over-plotting. You can reduce the size of points on the plot, increase their transparency, or set them to slightly offset each other (known as adding jitter). We do all three below.
 
 hospitals %>% 
   filter(STATUS == "OPEN") %>%
@@ -730,47 +792,62 @@ hospitals %>%
   geom_jitter(size = 0.5, alpha = 0.1) + #Change geom_point to geom_jitter, reduce the size, add transparency for overplotting
   theme_bw() +
   theme(axis.text.x = element_text(angle = 45, hjust=1)) +
-  labs(title = "Number of Beds in Hopsitals by Type", x = "Type", y = "Number of Beds")
+  labs(title = "Number of Beds in Hospitals by Type", x = "Type", y = "Number of Beds")
 
 ```
 
 #### Titling a Point Plot
 
-Note how I titled my plot above: "Number of Beds in Hopsitals in the US that are Open by Type" Here I am displaying the number of beds by Type. A good formula for titling point plots is as follows:
+Note how I titled my plot above: "Number of Beds in Hospitals in the US that are Open by Type" Here I am displaying the number of beds by Type. A good formula for titling point plots is as follows:
 
 Number/Measure of [y-axis variable name] in _____ by [x-axis variable name] 
 
 The blank should be filled with your unit of observation. The [x-axis variable name] should be your x-label and "Number/Measure of [y-axis variable name]" should be your y-label.
 
-#### What if I have qualified units of observation?
+#### What if I have multi-dimensional data?
 
-If this is the case I would encourage you to filter your plot to one value in one of your qualified variables. For instance if world_health_econ is qualified by country and year, I can filter to the most recent year before creating a point plot of the private share of health spending by continent.
+If this is the case I would encourage you to filter your data as you have been doing elsewhere. For instance if cases is unique by county, state, and date, I can filter to the most recent date before creating a point plot of the cases by state. This will show me the differences in cases across the third variable in my unique key - county. Note that to create my title, I will need to create a string that includes the most recent date. I also do this below, using summarize (a function we will go over next week).
 
 ```{r fig.height=5, fig.width=10}
-world_health_econ %>% 
-  filter(year == max(year, na.rm = TRUE)) %>%
-  ggplot(aes(x = continent, y = priv_share_health_sp)) + 
-  geom_point(size = 2, alpha = 0.8) +  
+#Run this code chunk.
+
+plot_title <- paste("Covid-19 Cases per County by State as of", cases %>% summarize(date = max(date, na.rm = TRUE)) %>% pull())
+
+cases %>% 
+  filter(date == max(date, na.rm = TRUE)) %>%
+  ggplot(aes(x = state, y = cases)) + 
+  geom_point(size = 3, alpha = 0.25) +  
   theme_bw() +
   theme(axis.text.x = element_text(angle = 45, hjust=1)) +
-  labs(title = "Private Share of Health Spending in Countries by Continent in 2010", x = "Continent", y = "Private Share of Health Spending") 
+  labs(title = plot_title, x = "State", y = "Covid-19 Cases") 
 ```
+
+From this plot, I can see the states with counties with particularly high case counts by the most recent reporting date.
 
 ### Scatterplots
 
-*Scatterplots* display the relationship or correlation between two numeric variables.
+*Scatterplots* display the relationship or correlation between two numeric variables. For instance, below we plot the relationship between the BEDS variable and the POPULATION variable in the hospitals dataset. 
+
+There are different ways to characterize the correlations between variables in data. We may consider the *strength* of a correlation, the *shape* of a correlation, and whether the correlation is positive or negative. 
+
+* Two variables in a scatterplot can be said to have a strong correlation when points are clustered closely to a central line or curve. The more scattered throughout the plot the points are, the weaker the correlation.
+* Two variables in a scatterplot can be said to have a linear correlation when the scatterplot tends to produce a straight line. This means that the rate of change between two variables is steady. However, when a scatterplot produces a curve, this indicates that the rate of change between two variables is not as constant.
+* Two variables in a scatterplot can be said to have a positive correlation when the points move upward from the bottom left corner towards the top right corner of the plot. This means that as values in variable increases, the values in the other variable also increase. When points move downward from the top left corner to the bottom right corner of the plot, we can say that the variables negatively correlation. This means that as values in variable increases, the values in the other variable decreases.
 
 ```{r fig.height=8, fig.width=10}
+#Run this code chunk.
+
 #ggplot(df, aes(x = NUMERIC_VARIABLE, y = NUMERIC_VARIABLE)) + geom_point()
 
 hospitals %>% 
   filter(STATUS == "OPEN") %>%
   ggplot(aes(x = BEDS, y = POPULATION)) + 
-  geom_point(size = 0.5) +
+  geom_point(size = 3, alpha = 0.1) +
   theme_bw() +
   labs(title = "Relationship between Hospital Beds and Population in the US", x = "Beds", y = "Population") 
 ```
-> Note how this plot is particularly useful for finding outliers.
+
+> Note that this plot has a strong, linear positive correlation. As BEDS increase in this variable, POPULATION also tends to increase. 
 
 #### Titling a Scatterplot
 
@@ -780,11 +857,13 @@ Relationship between _____ [x-axis variable name] and [y-axis variable name]
 
 The blank should be filled with your unit of observation. The [x-axis variable name] should be your x-label and [y-axis variable name]" should be your y-label.
 
-#### What if I have qualified units of observation?
+#### What if I have multi-dimensional data?
 
-If this is the case I would encourage you to filter your plot to one value in one of your qualified variables. For instance if world_health_econ is qualified by country and year, I can filter to the most recent year before creating a point plot of the private share of health spending by continent.
+If this is the case I would encourage you to filter your plot to one value in one of the variables that make up your unique key. For instance if world_health_econ is unique by country and year, I can filter to the most recent year before creating a point plot of the private share of health spending by continent.
 
 ```{r fig.height=8, fig.width=10}
+#Run this code chunk.
+
 #ggplot(df, aes(x = NUMERIC_VARIABLE, y = NUMERIC_VARIABLE)) + geom_point()
 
 world_health_econ %>% 
@@ -796,136 +875,94 @@ world_health_econ %>%
   scale_size_continuous(range = c(1, 10), labels = scales::comma)
 ```
 
-### Produce three plots that represent co-variation in your dataset. 
+> Note that this plot has a weaker, curvilinear, positive correlation. As Total Health Spending per Person increases in this variable, Life Expectancy also tends to increase, but the rate of change at which it increases is not constant.  
 
-You need not include every plot I described above. At this point, please continue to hold off on selecting a geographic categorical variable. Be sure to zoom in or out on your data if you have qualified units of observation. 
+Have you heard the quip "Correlation does not equal causation"? This is particularly important to consider here. In lab 7, we will examine some confounding variables that may be mediating how values appear to correlate in our data. For now, it's important to note that just because we see a correlation between total health spending and life expectancy does not mean that increasing total health spending in a country **causes** life expectancy to increase. This is of course a complex issue with lots of other variables involved. 
+
+### Produce two plots that represent co-variation in your dataset. 
+
+You need not include every plot I described above. Be sure to zoom in to certain observations in your data if you have multi-dimensional data. 
+
+#### Plot Co-Variation in your Dataset
 
 ```{r fig.height=8, fig.width=10}
 #Fill the code for plot 1 here. Add a title and labels to your plots. Be sure to adjust for overplotting.
 ```
 
-What question might this analysis help to address?
+Copy and paste the definitions of the variables you selected from the data dictionary below. 
 
 ```{r eval=FALSE}
 Fill your response here. 
 ```
 
-Are there any other variables in your dataset that you need to take into consideration before directing this analysis towards answering that question? In other words, do you need to zoom into any specific areas of the dataset (by filtering) in order to appropriately address this question? If so, which? Be sure to adjust your plot above to reflect this.
+1. QUERY: Below, write a research question that the code you just ran is designed to be able to answer. Make sure you phrase your question directly in relation to the results of your code. In other words, you have the answer; now come up with the question. Consider this a check on whether you understand what the code above is doing. If you are unsure how to compose this question, you probably want to study the functions above a bit more closely.
 
 ```{r eval=FALSE}
 Fill your response here. 
 ```
 
-What insight can you draw from this plot?
+Are there any other variables in your dataset that you need to take into consideration before directing this analysis towards answering that question? In other words, do you need to zoom into any specific areas of the dataset (by filtering) in order to appropriately address this question? If so, which? (For instance, for the hospitals dataset we needed to filter to hospitals that were OPEN in order to address questions about infrastructure). Briefly note this below. 
 
 ```{r eval=FALSE}
 Fill your response here. 
 ```
+
+2. SUMMARIZE: Reviewing the output of your code, summarize one thing that you learn about your topic from running this code chunk. In other words, what is one thing that the results of this analysis empirically tell us about the topic? Be specific, considering the geographic, temporal, and topical scope of your data.
+
+```{r eval=FALSE}
+Fill your response here. 
+```
+
+3. INTERPRET: Now imagine you were reporting your findings to a decision-maker on your topic. Describe to that decision-maker why they should care. In other words, *interpret* what is important about this finding. 
+
+```{r eval=FALSE}
+Fill your response here. 
+```
+
+4. REFLECT: What else would we need to know to fully address this question? Knowing what you know about how the data was collected and aggregated, what uncertainties remain in regards to addressing this question? In what ways is the analysis limited by the scope of the data's definitions or categories?
+
+```{r eval=FALSE}
+Fill response here. 
+```
+
+#### Plot Co-Variation in your Dataset an Alternative Way
 
 ```{r fig.height=8, fig.width=10}
 #Fill the code for plot 2 here. Add a title and labels to your plots. Be sure to adjust for overplotting.
 ```
 
-What question might this analysis help to address?
+Copy and paste the definitions of the variables you selected from the data dictionary below. 
 
 ```{r eval=FALSE}
 Fill your response here. 
 ```
 
-Are there any other variables in your dataset that you need to take into consideration before directing this analysis towards answering that question? In other words, do you need to zoom into any specific areas of the dataset (by filtering) in order to appropriately address this question? If so, which? Be sure to adjust your plot above to reflect this.
+1. QUERY: Below, write a research question that the code you just ran is designed to be able to answer. Make sure you phrase your question directly in relation to the results of your code. In other words, you have the answer; now come up with the question. Consider this a check on whether you understand what the code above is doing. If you are unsure how to compose this question, you probably want to study the functions above a bit more closely.
 
 ```{r eval=FALSE}
 Fill your response here. 
 ```
 
-What insight can you draw from this plot?
+Are there any other variables in your dataset that you need to take into consideration before directing this analysis towards answering that question? In other words, do you need to zoom into any specific areas of the dataset (by filtering) in order to appropriately address this question? If so, which? (For instance, for the hospitals dataset we needed to filter to hospitals that were OPEN in order to address questions about infrastructure). Briefly note this below. 
 
 ```{r eval=FALSE}
 Fill your response here. 
 ```
 
-```{r fig.height=8, fig.width=10}
-#Fill the code for plot 3 here. Add a title and labels to your plots. Be sure to adjust for overplotting.
-```
-
-What question might this analysis help to address?
+2. SUMMARIZE: Reviewing the output of your code, summarize one thing that you learn about your topic from running this code chunk. In other words, what is one thing that the results of this analysis empirically tell us about the topic? Be specific, considering the geographic, temporal, and topical scope of your data.
 
 ```{r eval=FALSE}
 Fill your response here. 
 ```
 
-Are there any other variables in your dataset that you need to take into consideration before directing this analysis towards answering that question? In other words, do you need to zoom into any specific areas of the dataset (by filtering) in order to appropriately address this question? If so, which? Be sure to adjust your plot above to reflect this.
+3. INTERPRET: Now imagine you were reporting your findings to a decision-maker on your topic. Describe to that decision-maker why they should care. In other words, *interpret* what is important about this finding. 
 
 ```{r eval=FALSE}
 Fill your response here. 
 ```
 
-What insight can you draw from this plot?
+4. REFLECT: What else would we need to know to fully address this question? Knowing what you know about how the data was collected and aggregated, what uncertainties remain in regards to addressing this question? In what ways is the analysis limited by the scope of the data's definitions or categories?
 
 ```{r eval=FALSE}
-Fill your response here. 
+Fill response here. 
 ```
-
-## Start a shiny app.
-
-At this point in the quarter, we are prepared to start piecing together a dashboard for displaying the data. Shiny Apps have two components - a front end (ui), and a backend (server). On the front end, we will be coding how we want our data displayed. **For this week, the only thing you need to do on the front end is fill in your title.** On the backend, we will be coding our data analysis. 
-
-Fill in your title in the UI. Leave everything else the same.
-
-```{r}
-ui <- dashboardPage(
-  
-  #REPLACE 'TITLE HERE' BELOW WITH YOUR OWN TITLE
-  dashboardHeader(title = "TITLE HERE"),
-  #REPLACE 'TITLE HERE' ABOVE WITH YOUR OWN TITLE
-  
-  dashboardSidebar(
-    #inputs will go here eventually but not now. 
-  ),
-  
-  dashboardBody(
-      box(plotOutput("plot1")),
-      box(plotOutput("plot2"))
-  )
-)
-```
-
-Replace my plots in the code below with two of the plots that you created in this lab. 
-
-```{r}
-server <- function(input, output, session) {
-  
-  output$plot1 <- renderPlot({
-  #REPLACE BELOW WITH YOUR OWN PLOT
-    hospitals %>% 
-      filter(STATUS == "OPEN") %>%
-      ggplot(aes(x = TYPE)) + 
-      geom_bar() +
-      labs(title = "Number of Hospitals in the US that are Open by Type", x = "Type", y = "Count of Hospitals") + 
-      theme_bw() +
-      theme(axis.text.x = element_text(angle = 90, hjust=1)) 
-  #REPLACE ABOVE WITH YOUR OWN PLOT
-    
-  })
-  
-  output$plot2 <- renderPlot({
-  #REPLACE BELOW WITH YOUR OWN PLOT
-    hospitals %>% 
-      filter(STATUS == "OPEN") %>%
-      ggplot(aes(x = TYPE)) + 
-      geom_bar() +
-      labs(title = "Number of Hospitals in the US that are Open by Type", x = "Type", y = "Count of Hospitals") + 
-      theme_bw() +
-      theme(axis.text.x = element_text(angle = 90, hjust=1)) 
-  #REPLACE ABOVE WITH YOUR OWN PLOT 
-  })
-  
-}
-```
-
-```{r}
-shinyApp(ui, server)
-```
-
-When you knit this notebook, you will get a prompt asking whether you would prefer to render and run this document as Shiny. Click No. We will be leaving this notebook in a GitHub document format. 
-
