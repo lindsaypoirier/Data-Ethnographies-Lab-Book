@@ -1,14 +1,14 @@
 ---
 title: "Lab 1 - Introduction to R"
 output:
-  html_document:
-    df_print: paged
-    toc: yes
-    toc_depth: '3'
   html_notebook:
     toc: yes
     toc_depth: 3
     toc_float: yes
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_depth: '3'
 editor_options:
   chunk_output_type: inline
 ---
