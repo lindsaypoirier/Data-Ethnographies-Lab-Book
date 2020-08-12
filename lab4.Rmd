@@ -37,15 +37,15 @@ library(lubridate)
 In some cases, you will be able to import your datasets directly from the sites where they are hosted. If you navigate to the portal where the data is hosted, and see a link to "Download" or "Export" the data *as a CSV or a Spreadsheet*, you can right click on that link and then select "Copy Link Address." You'll want to copy this link into the code below. 
 
 
-In portals run on Socrata, you will see an option to access the data via API. If you click on the API button, you will see a link to the API Endpoint. Be sure to select CSV from the dropdown next to this link before clicking Copy. You'll want to copy this link into the code below. Note that each Socrata portal places limitations on the extent of data that can be accessed via API. If you notice that not all rows of the dataset are importing after running the code below, you will want to read through the API docs to determine the steps you would need to take to access the full database. 
+In portals run on Socrata, you will see an option to access the data via API. If you click on the API button, you will see a link to the API Endpoint. Be sure to select CSV from the dropdown next to this link before clicking Copy. You'll want to copy this link into the code below. Note that each Socrata portal places limitations on the extent of data that can be accessed via API. If you notice that not all rows of the dataset are importing after running the code below, you will want to read through the API docs to determine the steps you would need to take to access the full database. I provide an example of this in the code below. 
 
 A final option is to download the data to your local machine and store it in the "datasets" folder in this repository. If you choose this option, you will be able to reference the location of the data with the path "datasets/[FILE.csv]"
 
 For our example datasets:
 
-* The New York Times team has made the Covid-19 cases dataset available in their own GitHub repo. I include the link to that data below.
 * The DHS has made the hospitals dataset available for download on the HIFLD site.
-* I have uploaded the aggregated Gapminder data to my GitHub repo. 
+* The New York Times team has made the Covid-19 cases dataset available in their own GitHub repo. I include the link to that data below.
+* The Center for Medicaid and Medicare Services has made the In-Patient Medicare Provider Utilization adn Paymnent data available for download on their open data portal, run by Socrata.
 
 I can import all of these datasets into RStudio by reading these files in as a CSV, using the function **read.csv("[URL_OR_PATH_TO_DATE_FILE]")**. When we read this data file into R, it will import as a data frame (reference lab 1 if you do not know what a data frame is). We will store that data frame in a variable using **<-** so that we may reference the dataset throughout the lab.
 
@@ -56,7 +56,8 @@ I can import all of these datasets into RStudio by reading these files in as a C
 
 hospitals <- read.csv("https://opendata.arcgis.com/datasets/6ac5e325468c4cb9b905f1728d6fbf0f_0.csv", stringsAsFactors = FALSE)
 
-world_health_econ <- read.csv("datasets/world_health_econ.csv", stringsAsFactors = FALSE)
+ipps <- read.csv("https://data.cms.gov/api/views/tcsp-6e99/rows.csv?$limit=200000", stringsAsFactors = FALSE)
+#Notice how in the link above, I've included $limit=200000? This is because by default this Socrata portal only provides access to 100000 rows of data via API. After checking the number of rows in this dataset on Socrata (196,325), I checked the API docs to see how to increase the number of rows that could be accessed via the API and learned that I could include $limit=[NUMBER_OF_ROWS] at the end of the API Endpoint URL to increase the limit.
 
 cases <- read.csv("https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv", stringsAsFactors = FALSE)
 
@@ -201,13 +202,25 @@ Null values should appear as a greyed-out and italicized *NA* (Not Available). T
 * "NOT AVAILABLE"
 * "N/A"
 
-In the world_health_econ dataset, we can see that empty data is formatted correctly with a greyed out NA.
+In the ipps dataset, there are no NA values. We can double check this by examining the first several rows of the data and calling **colSums(is.na())**.
 
 ```{r}
-#Run to check out the first ten rows of world_health_econ.
+#Run this code to see the number of null values in each column.
 
-world_health_econ %>% head(10)
+ipps %>% head(10)
+
+colSums(is.na(ipps))
 ```
+
+Sometimes, when working with data, NA values will not appear in the first several rows. This is the case with the cases data. Run the code below, and in the tab that opens, scroll to row 417.
+
+```{r}
+#Run this code and scroll to row 417 in the viewer. 
+
+View(cases)
+```
+
+Fortunately, the NA values in this dataset are coded correctly - as greyed out and italicized NA. Data dictionaries can sometimes be helpful in documenting how NA values are recorded but not always. Often you will need to do deeper investigation on your data. 
 
 In the hospitals dataset, we can see by calling head() that empty data is filled with the string "NOT AVAILABLE". (Check out the variables ZIP4 and TELEPHONE below). We want to convert such values to NA values. We can also see that, in some cases, -999 POPULATION and BEDS are reported. This signals to us that -999 is being used to indicate that data is not available. We can confirm this in the data dictionary. In fact, quite often -999 is used to indicate null values.
 
@@ -362,7 +375,7 @@ hospitals %>% select(POPULATION, BEDS, TTL_STAFF) %>% head(10)
 
 *Continuous numeric variables* are variables that would take an infinite amount of time to precisely count. You can think of these as variables in which it is always possible to measure the value more precisely. For instance, time would be considered a continuous numeric variable because time can be measured with infinite amount of specificity - hours > minutes > seconds > milliseconds > microseconds > nanoseconds ... and so on. Ruler measurements are also continuous because they can also be measured with infinite more precision. In the hospitals dataset, both latitude and longitude are continuous numeric variables as we can always measure them with more precision. 
 
-> While it's a bit controversial, for the purposes of this assignment, we will also treat ratios as continuous data (such as total health spending per person in the world_health_econ data), so you may list those below.
+> While it's a bit controversial, for the purposes of this assignment, we will also treat ratios as continuous data, so you may list those below.
 
 List three continuous numeric variables in your dataset. Use **select()** to select these variables in your dataset, and use **head(10)** to limit the display to the first 10 rows.
 
@@ -415,7 +428,7 @@ In starting our data analysis, we need to have a good sense of what each observa
 
 paste("I have", nrow(hospitals), "unique _____ represented in my dataset.")
 paste("I have", nrow(cases), "unique _____ represented in my dataset.")
-paste("I have", nrow(world_health_econ), "unique _____ represented in my dataset.")
+paste("I have", nrow(ipps), "unique _____ represented in my dataset.")
 ```
 
 Get this statement started for your dataset:
@@ -456,30 +469,30 @@ paste("I have", nrow(hospitals), "unique hospitals represented in my dataset.")
 
 > Note that NAME is typically not an appropriate variable to use as a unique key. Let me provide an example to demonstrate this. When I worked for BetaNYC, I was trying to build a map of vacant storefronts in NYC by mapping all commercially zoned properties in the city, and then filtering out those properties where a business was licensed or permitted. This way the map would only include properties where there wasn't a business operating. One set of businesses I was filtering out was restaurants. The only dataset that the city had made publicly available for restaurant permits was broken. It was operating on an automated process to update whenever there was a change in the permit; however, whenever a permit was updated, rather than updating the appropriate fields in the existing dataset, it was creating a new row in the dataset that only included the permit holder (the restaurant name), the permit type, and the updated fields. Notably the unique permit ID was not being included in this new row. We pointed this issue out to city officials, but fixing something like this can be slow and time-consuming, so in the meantime, we looked into whether we could clean the data ourselves by aggregating the rows that referred to the same restaurant. However, without the permit ID it was impossible to uniquely identify the restaurants in the dataset. Sure, we had the restaurant name, but do you know how many Wendy's there are in NYC?
 
-In the world_health_econ dataset, the unique ID is less obvious. Because we have values reported for multiple countries in multiple years, we need to rely on two variables to signify what makes each observation unique - country and year.
+In the ipps dataset, the unique ID is less obvious. Because we have values reported for multiple diagnosis categories at multiple hospitals, we need to rely on two variables to signify what makes each observation unique - DRG.Definition and Provider.ID.
 
 ```{r}
 #Run. 
 
 # Count the distinct values in your unique key
 n_unique_keys <- 
-  world_health_econ %>% 
-  select(country, year) %>% 
+  ipps %>% 
+  select(DRG.Definition, Provider.Id) %>% 
   n_distinct()
 
 # Count the rows in your dataset
-n_rows <- nrow(world_health_econ)
+n_rows <- nrow(ipps)
 
 # Make sure these numbers are equal
 n_unique_keys == n_rows
 ```
 
-In this dataset a country and year is what makes each observation unique. In other words, the dataset's observational unit is a country in a given reporting year. Now you can confidently say:
+In this dataset a diagnosis category and unique provider is what makes each observation unique. In other words, the dataset's observational unit is a diagnosis category for a given provider. Now you can confidently say:
 
 ```{r}
 #Run. 
 
-paste("I have", nrow(hospitals), "unique countries in a given reporting year represented in my dataset.")
+paste("I have", nrow(ipps), "unique diagnosis categories for a given provider represented in my dataset.")
 ```
 
 In the cases dataset, the unique ID is also more complicated. cases counts are listed for each county in each state, each day since January 21, 2020, and some states have counties with the same name. Because of this we will need to reference the state, county code, and the date reporting to uniquely identify each row. 
@@ -580,6 +593,12 @@ Later in the documentation, the New York Times team goes on:
 
 Up through April, the US CDC had only been reporting "confirmed cases." However, on April 5, 2020, the Council of State and Territorial Epidemiologists Centers began recommending that states report both in order to account for highly likely cases that had not received a laboratory test. Some states have began reporting both confirmed and probable cases; other states didn't. The New York Times can only report the numbers based on what is being reported, so they list in the [documentation](https://github.com/nytimes/covid-19-data) how each state is reporting their numbers. This is something we have to keep in mind when monitoring the differences in cases across states. Not every state defines a case in the same way!
 
+Now consider the ipps dataset. In the [data documentation](https://data.cms.gov/api/views/tcsp-6e99/files/1a3b7fed-4f45-4eec-9957-94313493cfac?download=true&filename=Medicare_Hospital_Inpatient_PUF_Methodology_2019-08-05.pdf) for this dataset, a section called Population helps us discern the scope of the observations recorded in this data:
+
+> The Inpatient PUF includes data on FFS beneficiaries from inpatient providers that submitted Medicare Part A IPPS short term institutional claims during the fiscal year. To protect the privacy of Medicare beneficiaries, any aggregated records which are derived from 10 or fewer discharges are excluded from the Inpatient PUF.
+
+Let's unpack that a bit. In this case, FFS stands for fee-for-service, indicating an insurance plan in which a provider is paid separately for each service rendered. Medicare has four parts - Part A, Part B, Part C, and Part D. Part A is standard in Medicare coverage and covers short-term hospitalizations specifically (whereas Part C, which is not standard covers long-term in-patient stays). So this definition is telling us that this data covers each claim made by a Medicare Part A patient for a specific service. What is important to note from this definition is that the data is not representative of the payments made by the entire population the hospital serves. Specifically, it does not include any information about payments made by patients not covered by Medicare. It also does not include data about discharges with fewer than ten claims at a given hospital.
+
 Choose a key variable in your dataset. How is this key variable in your dataset defined? 
 
 ```{r eval=FALSE}
@@ -621,7 +640,19 @@ hospitals %>% select(OWNER) %>% distinct()
 hospitals %>% select(OWNER) %>% n_distinct()
 ```
 
-Upon running this, we might ask why these different hospital business models exist. With just a bit of research, we can find a [history of hospital ownership](https://www.nursing.upenn.edu/nhhc/nurses-institutions-caring/history-of-hospitals/). From this history, we can see that a number of cultural, political, and economic forces has shaped hospital ownership models. In other words, these categories have a rich cultural history and tell us not only about our data, but also about the cultural context in which data gets enumerated. 
+Upon running this, we might ask why these different hospital business models exist. With just a bit of research, we can find a [history of hospital ownership](https://www.nursing.upenn.edu/nhhc/nurses-institutions-caring/history-of-hospitals/). From this history, we can see that a number of cultural, political, and economic forces has shaped hospital ownership models. In other words, these categories have a rich cultural history and tell us not only about our data, but also about the cultural context in which data gets enumerated.
+
+In some cases, like in the hospitals examples we just looked at, data will only be classified into a few categories. However, in other cases, data can classified into many more categories. Take the DRG.Definition variable in the ipps dataset. This variable includes a code and description for a Medicare Severity Diagnosis Related Group (MS-DRG) classification - which is a standard classification system for grouping diagnoses and procedures at hospitals to facilitate payments for hospital services. Let's check out the categories in this variable.
+
+```{r}
+#Run the following code. 
+
+#df %>% select(VARIABLE_NAME) %>% distinct()
+ipps %>% select(DRG.Definition) %>% distinct()
+#df %>% select(VARIABLE_NAME) %>% n_distinct()
+ipps %>% select(DRG.Definition) %>% n_distinct()
+```
+How did the creators of this classification system (Robert B. Fetter, PhD, and John D. Thompson, MPH, of Yale University) determine how to divide these categories? What counts as a distinct diagnosis or procedure? Why does it matter whether or not there were complications/co-morbidity (e.g. "w cc" above)? The original goal of creating these categories was to curb rising healthcare costs in the US in the 1980s. The categories grouped diagnoses and procedures so that the Center for Medicare and Medicaid Services could vary the rates at which they would reimburse patients for hospital stays according to the variations in the cost for each diagnosis. Throughout the 2000s, the classification was revised to account for varying severities of a particular diagnosis - including separate categories for a diagnosis when the patient experienced complications/co-morbitity (cc) or major complications/co-morbidity (mcc) - since these cases often incurred much higher costs. 
 
 Choose a categorical variable in your dataset to explore further. Be sure to select a variable in which the values represented in each row are likely to appear more than once. Select that variable and then call distinct() and n_distinct(). 
 
@@ -654,10 +685,10 @@ colSums(sapply(cases, is.na))
 ```
 
 ```{r}
-#Run the following code to see how many NAs are in each column of world_health_econ.
+#Run the following code to see how many NAs are in each column of ipps.
 
 #colSums(sapply(df, is.na))
-colSums(sapply(world_health_econ, is.na))
+colSums(sapply(ipps, is.na))
 
 ```
 
@@ -694,60 +725,6 @@ We can see in all of these cases that the county is listed as Unknown or New Yor
 > "For instance, we report a single value for New York City, comprising the cases for New York, Kings, Queens, Bronx and Richmond Counties. In these instances the FIPS code field will be empty."
 
 > "Many state health departments choose to report cases separately when the patient’s county of residence is unknown or pending determination. In these instances, we record the county name as “Unknown.”"
-
-Now let's move to the world_health_econ dataset.
-
-```{r}
-#Run the following code to filter to rows with NA values. 
-
-#df %>% filter(is.na(VARIABLE_NAME)) %>% head(10) #We add head(10) to limit our output to the first ten rows
-
-world_health_econ %>% filter(is.na(tot_health_sp_pp)) %>% head(30)
-```
-
-If your dataset has no columns with NAs just note that below, and move on. Otherwise, fill in the blanks below. 
-
-```{r}
-#Uncomment the appropriate lines below, and fill in your data frame and variable. Run.
-
-#_____ %>% filter(is.na(_____)) %>% head(10)
-```
-
-Is there anything special about these rows? What hypotheses do you have for why there may be missing data in the variable you selected? 
-
-To confirm our hypotheses about NAs, we often have to apply additional filter conditions to the dataset. Let’s say that we hypothesize that there are missing values in a column because a certain geography didn’t report data; we may want to filter the dataset to the rows that represent that geography to see if any of the rows in the dataset have values listed.
-
-```{r}
-#Run the following code.
-
-#df %>% filter(Country == "Luxembourg") 
-
-world_health_econ %>% filter(country %in% c("Afghanistan", "Liberia"))
-#...and then we would check to see if there are missing values in the columns under consideration. 
-```
-
-Or maybe we hypothesize that a certain geography did not report values in a certain year. We can join multiple filter conditions by placing an ‘&’ between two statements.
-
-```{r}
-#Run the following code.
-
-#df %>% filter(Country == "Luxembourg" & Year == 2017) 
-
-world_health_econ %>% filter(country %in% c("Afghanistan", "Liberia") & year < 1999)
-#...and then we would check to see if there are missing values in the columns under consideration. 
-```
-
-Also note that we can filter to rows with all NAs in multiple columns by calling:
-
-```{r}
-#Run the following code.
-
-#df %>% filter_at(vars(VARIABLE_NAME1, VARIABLE_NAME2, VARIABLE_NAME5:VARIABLE_NAME8), all_vars(is.na(.)))
-
-world_health_econ %>% filter_at(vars(tot_health_sp_pp:gov_prop_health_spending), all_vars(is.na(.)))
-```
-
-With these tests, I can see that it is likely that there are NAs in the world_health_econ dataset because certain countries - such as Afghanistan, Iraq, Liberia, Zimbabwe, and Somalia did not report these measures in specific years. Notably these are mostly countries where there are considerable barriers to data collection, due to conflict and corruption. Unfortunately, the WHO has released limited documentation for this data, so it is difficult to confirm this.
 
 Apply a few additional filter conditions to test your hypothesis as to why there are missing values in the variable you selected. 
 
