@@ -71,24 +71,18 @@ This is useful when we are just filling text into the code chunk.
 
 ### Headings
 
-```{r eval=FALSE}
+
 Use '#' to create headings:
   
 # Heading 1
 ## Heading 2
 ### Heading 3
-```
+
 
 ### Tables
 
-```{r eval=FALSE}
+
 Tables can be formated like this:
-  
-Header 1 | Header 1
--------- | --------
-Cell 1  | Cell 2
-Cell 3  | Cell 4
-```
 
 Header 1 | Header 1
 -------- | --------
@@ -97,26 +91,14 @@ Cell 3  | Cell 4
 
 ### Bullets and Numbering
 
-```{r eval=FALSE}
+
 You can bullet content using the '*':
 
 * Point 1
 * Point 2
-```
 
-This will output:
 
-* Point 1
-* Point 2
-
-```{r eval=FALSE}
 You can number content like this:
-
-1. Point 1
-2. Point 2
-```
-
-This will output:
 
 1. Point 1
 2. Point 2
@@ -132,7 +114,7 @@ On March 30, 2020, Nate Silver - who had been vociferously vocal in sharing his 
 
 The tweet really nicely sums up an overriding theme of these Lab Books. We can learn all sorts of techniques to produce beautiful charts, tables, and visualizations with data. But when we are dealing with messy, complex, and dynamic phenomena, such techniques can hide just how much uncertainty there is in data and just how much situated human perspective is interwoven through numeric calculations. This Lab Book is designed to encourage you to always keep these issues in mind as you engage in data analysis. 
 
-Do we all know who Nate Silver is? Nate Silver is perhaps one of the biggest superstars of statistics today. He gained notoriety following the 2008 US presidential election, when he first accurately predicted the results of 49 of the 50 states. By the 2012 election, his data had accurately predicted the results of all 50 states. His website FiveThirtyEight.com was quickly acquired by the New York Times and later by ESPN and ushered in a new wave of work at the intersection of data science and election forecasting. However, Nate Silver is well-acquainted with messy and uncertain data. While none of the major polling sites were able to accurately predict the results of the 2016 US presidential election, FiveThirtyEight's predictions (while placing the chances of a Trump victory higher than other news sources) were perhaps most surprising following his success in previous elections. By election day, FiveThirtyEight had placed the likelihood of a Clinton victory at 70%. I remember watching the news on election night and, as an anthropologist of data, almost falling out of my chair when I heard political correspondent Mike Murphy claim that "Today, data kind of died." Watch the clip below:
+Do we all know who Nate Silver is? Nate Silver gained notoriety following the 2008 US presidential election, when he first accurately predicted the results of 49 of the 50 states. By the 2012 election, his data had accurately predicted the results of all 50 states. His website FiveThirtyEight.com was quickly acquired by the New York Times and later by ESPN and ushered in a new wave of work at the intersection of data science and election forecasting. However, Nate Silver is well-acquainted with messy and uncertain data. While none of the major polling sites were able to accurately predict the results of the 2016 US presidential election, FiveThirtyEight's predictions (while placing the chances of a Trump victory higher than other news sources) were perhaps most surprising following his success in previous elections. By election day, FiveThirtyEight had placed the likelihood of a Clinton victory at 70%. I remember watching the news on election night and, as an anthropologist of data, almost falling out of my chair when I heard political correspondent Mike Murphy claim that "Today, data kind of died." Watch the clip below:
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/MhT5qT116wo" frameborder="0" allowfullscreen></iframe>
 
@@ -153,13 +135,15 @@ In this Lab Book, we are going to conduct an ethnography of a dataset. You may b
 The last time I ran this course, one student spent the quarter studying a dataset documenting the perimeters of each documented wildfire in California since 1900. Each row in the dataset documented a fire name, the date the first alarm was sounded, the date it was contained, and the acreage that it burned. Each fire was also classified with a standardized list of fire "causes."  This list included causes like "Campfire," "Arson," and "Lightning." The student created visualizations of the number of documented fires in California that had been the result of each cause. In doing so, she found something odd - the cause of the fewest fires in California were collectively categorized as "Illegal Alien Campfires." 
 
 ```{r fig.height=3, fig.width=5}
-fires <- read.csv("datasets/Fires_100.csv", stringsAsFactors = FALSE)
+fires <- read.csv("https://raw.githubusercontent.com/lindsaypoirier/STS-115/master/datasets/Fires_100.csv", stringsAsFactors = FALSE)
 fires %>% 
-  ggplot(aes(x = CAUSE, fill = CAUSE)) +
+  ggplot(aes(x = reorder(CAUSE,CAUSE,
+                     function(x)-length(x)), fill = CAUSE)) +
   geom_bar() +
-  labs(title = "Number of CalFIRE-documented California Wildfires since 1878 by Cause", x = "Cause", y = "Count of Wildfires") + 
-  theme_bw() +
-  theme(legend.position = "none") +
+  labs(title = "Count of CalFIRE-documented Wildfires since 1878 by Cause", x = "Cause", y = "Count of Wildfires") + 
+  theme_minimal() +
+  theme(legend.position = "none", 
+        plot.title = element_text(size = 12, face = "bold")) +
   coord_flip() 
 ```
 
@@ -169,13 +153,15 @@ When we ethnographically analyze a dataset - immersing ourselves in it to invest
 
 ## A Note on the Word Bias
 
-Some of you may be thinking - if there are human perspectives shaping data, doesn't that make it biased? After this section, you will not see or hear me use the word 'bias' in these notebooks. I avoid the word deliberately. The Oxford English Dictionary defines bias as
+Some of you may be thinking - if there are human perspectives shaping data, doesn't that make it biased? 
+
+The Oxford English Dictionary defines bias as:
 
 > "An inclination, leaning, tendency, bent; a preponderating disposition or propensity; predisposition towards; predilection; prejudice." 
 
-All too often I hear people talk about the significance of "eliminating bias" from data or "avoiding biases" in data analysis. To me, this is firstly impossible. Numbers do not emerge out of nowhere but emerge from human perspectives (with inclinations, leanings, tendencies, and bents) deciding what to count and how to count it. I challenge any one of you to approach me with a number that has not in some way been generated by a human (hint: this is a trick - if you, as a human, come to me with a number, you've already failed the challenge.) You can never remove that human element from data; there will always be bias. If you think about it, even the fervent commitment to remove bias from data is a bias! 
+All too often I hear people talk about the significance of "eliminating bias" from data or "avoiding biases" in data analysis. This is firstly impossible. Numbers do not emerge out of nowhere but emerge from human perspectives (with inclinations, leanings, tendencies, and bents) deciding what to count and how to count it. I challenge any one of you to approach me with a number that has not in some way been generated by a human (hint: this is a trick - if you, as a human, come to me with a number, you've already failed the challenge.) You can never remove that human element from data; there will always be bias. If you think about it, even the fervent commitment to remove bias from data is a bias! 
 
-Secondly, the idea of doing so is also not a particularly responsible goal. When we suggest that it is possible for numbers to speak for themselves, we tend to ignore all of the ways that data can be weaponized against groups of people. We are seeing this play out constantly in the news today. So-called "unbiased" algorithms for predicting where crime will happen turn into tools of surveillance for poor and racially diverse communities:
+Secondly, suggesting the possibility that data can be neutral can actually exacerbate certain kinds of social injustices. When we suggest that it is possible for numbers to speak for themselves, we tend to ignore all of the ways that data can be weaponized against groups of people. We are seeing this play out constantly in the news today. So-called "unbiased" algorithms for predicting where crime will happen turn into tools of surveillance for poor and racially diverse communities:
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/ZMsSc_utZ40" frameborder="0" allowfullscreen></iframe>
 
@@ -183,7 +169,17 @@ So-called "unbiased" algorithms for screening resumes turn out to favor men over
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/JOzQjT-hJ8k" frameborder="0" allowfullscreen></iframe>
 
+In this sense, falsely presenting a possibility of eliminating bias gives numbers too much rhetorical power, making it much harder to critique the injustices they propagate.
+
 This is not to say that we shouldn't critique data representations and combat data practices that propagate inequality or harm certain communities; we absolutely should. However, in a world where this is playing out, I would much prefer to *know* the politics and perspectives of the individuals collecting data and producing data analyses than to pretend they don't exist. Then I can decide for myself whether I find their work trustworthy. We need ethical and politically responsible human data stewards - not processes that pretend to be able to strip data of its humanness. I hope you see these notebooks as an opportunity to develop some of these skills. Throughout our work, we will take biased data as a given and figure out how to move from there. 
+
+With this in mind, I have a recommendation for how you think about the term 'bias' in these notebooks. Any time you feel compelled to use any version of the word 'bias', I encourage you to highlight it and then outline three things: 
+
+1. What kind of bias are you referring to? 
+2. Who propagates that bias?
+3. What are the consequences of that bias?
+
+You may find that it will take some practice to do this. The word bias has become so ingrained in popular lexicon that we can sometimes forget why we should pay attention to or care about it in the first place. These notebooks are designed to get you to think more critically about when, why, and how biases in data matter and to push beyond seeing them as a problem with data in and of themselves.
 
 ## Introduction to R
 
@@ -213,6 +209,7 @@ class(class_name)
 class(class_size)
 class(class_number)
 ```
+
 Did you notice how class_number above is a character variable? This is because when we created the class_number variable above, we put the number in quotation marks - indicating to R to treat the number as a set of characters rather than a number. Since our class number is a reference to our class, it acts more like a label than a number. 
 
 If someone drops a class, we can easily change the value of the class size variable.
@@ -224,6 +221,7 @@ class_size <- class_size - 1
 #Print the variable
 class_size
 ```
+
 Notice how we re-assigned the new subtracted value to class_size above. 
 
 We can also perform calculations on variables, such as addition, subtraction, multiplication, and division. Checking whether variables are greater than, less than, or equal to each other will return TRUE or FALSE. 
@@ -412,4 +410,5 @@ What if you don't know what the column names are? To see a list of column names,
 colnames(df)
 ```
 Finally, on the top right hand side of your RStudio screen, you will see a tab called Environment. If you click on that tab, you should see all of the data that you have stored in variables. You can check column names here. 
+
 
